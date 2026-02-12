@@ -5,6 +5,10 @@ export const MAP_CANVAS = '.map canvas'
 export const MODE_BUTTON = '.draw-mode-selector__button'
 export const MODE_BUTTON_SELECTED = '.draw-mode-selector__button--selected'
 
+/** data-mode 属性でボタンを特定 */
+export const modeButtonSelector = (dataMode: string) =>
+  `.draw-mode-selector__button[data-mode="${dataMode}"]`
+
 /** 描画コントロールパネル */
 export const DRAW_CONTROL_PANEL = '.draw-control-panel'
 export const HELPER_TEXT = '.draw-control-panel__helper'

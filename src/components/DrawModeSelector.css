@@ -1,11 +1,11 @@
 .draw-mode-selector {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 6px;
 }
 
 .draw-mode-selector__button {
-  padding: 6px 8px;
+  padding: 8px;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.2);
   background: #fff;
@@ -13,7 +13,14 @@
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.draw-mode-selector__button svg {
+  width: 24px;
+  height: 24px;
 }
 
 .draw-mode-selector__button--selected {
