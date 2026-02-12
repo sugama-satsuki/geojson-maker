@@ -1,10 +1,13 @@
 .draw-control-panel {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 280px;
+  top: 10px;
+  left: 10px;
+  width: auto;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
@@ -14,11 +17,7 @@
 
 .draw-control-panel__header {
   font-weight: 600;
-}
-
-.draw-control-panel__helper {
-  font-size: 13px;
-  color: #2d2d2d;
+  color: #444;
 }
 
 .draw-control-panel__draft {
@@ -44,27 +43,45 @@
 .draw-control-panel__draft-button,
 .draw-control-panel__clear-button {
   flex: 1;
-  padding: 6px 8px;
-  border-radius: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .draw-control-panel__draft-button {
-  background: #1a73e8;
+  background: linear-gradient(135deg, #1a73e8, #1567d3);
   color: #fff;
+  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+}
+
+.draw-control-panel__draft-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3b87ed, #1a73e8);
+  box-shadow: 0 3px 8px rgba(26, 115, 232, 0.4);
 }
 
 .draw-control-panel__draft-button--disabled {
   background: #9fc3ff;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .draw-control-panel__clear-button {
   border: 1px solid rgba(0, 0, 0, 0.2);
   background: #fff;
   color: #111;
+}
+
+.draw-control-panel__clear-button:hover {
+  background: #fef2f2;
+  border-color: #e86a4a;
+  color: #c0392b;
 }
 
 .draw-control-panel__count {

@@ -20,13 +20,6 @@ const DRAFT_LINE_LAYER_ID = 'geojson-maker-draft-line'
 const DRAFT_POINT_LAYER_ID = 'geojson-maker-draft-point'
 const DRAFT_POLYGON_LAYER_ID = 'geojson-maker-draft-polygon'
 
-const MODE_HELPERS: Record<DrawMode, string> = {
-  point: 'クリックした地点をポイントとして GeoJSON に追加します。',
-  line: 'クリックした地点を順に線として登録し、「完了」で確定します。',
-  polygon: 'クリックした地点をポリゴンとして登録し、「完了」で閉じます。',
-  symbol: 'クリックした地点にシンボル（強調表示されたポイント）を置きます。'
-}
-
 type PathMode = Extract<DrawMode, 'line' | 'polygon'>
 
 export const MapView: React.FC = () => {
@@ -234,7 +227,6 @@ export const MapView: React.FC = () => {
 
       <DrawControlPanel
         drawMode={drawMode}
-        helperText={MODE_HELPERS[drawMode]}
         isDrawingPath={isDrawingPath}
         draftCount={draftCoords.length}
         canFinalizeDraft={canFinalizeDraft}

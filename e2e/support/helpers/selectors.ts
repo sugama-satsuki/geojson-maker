@@ -11,7 +11,6 @@ export const modeButtonSelector = (dataMode: string) =>
 
 /** 描画コントロールパネル */
 export const DRAW_CONTROL_PANEL = '.draw-control-panel'
-export const HELPER_TEXT = '.draw-control-panel__helper'
 export const DRAFT_SECTION = '.draw-control-panel__draft'
 export const DRAFT_TEXT = '.draw-control-panel__draft-text'
 export const DRAFT_BUTTON = '.draw-control-panel__draft-button'

@@ -3,7 +3,6 @@ import './DrawControlPanel.css'
 
 type DrawControlPanelProps = {
   drawMode: DrawMode
-  helperText: string
   isDrawingPath: boolean
   draftCount: number
   canFinalizeDraft: boolean
@@ -15,7 +14,6 @@ type DrawControlPanelProps = {
 
 export function DrawControlPanel({
   drawMode,
-  helperText,
   isDrawingPath,
   draftCount,
   canFinalizeDraft,
@@ -28,7 +26,6 @@ export function DrawControlPanel({
     <div className='draw-control-panel'>
       <div className='draw-control-panel__header'>描画モード</div>
       <DrawModeSelector selectedMode={drawMode} onChange={onChangeMode} />
-      <div className='draw-control-panel__helper'>{helperText}</div>
       {isDrawingPath && (
         <div className='draw-control-panel__draft'>
           <div className='draw-control-panel__draft-text'>
@@ -41,6 +38,7 @@ export function DrawControlPanel({
               disabled={!canFinalizeDraft}
               className={`draw-control-panel__draft-button${canFinalizeDraft ? '' : ' draw-control-panel__draft-button--disabled'}`}
             >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
               確定
             </button>
             <button
@@ -48,6 +46,7 @@ export function DrawControlPanel({
               onClick={onClearDraft}
               className='draw-control-panel__clear-button'
             >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               クリア
             </button>
           </div>

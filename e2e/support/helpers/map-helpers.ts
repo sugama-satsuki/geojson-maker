@@ -13,11 +13,14 @@ export async function waitForMapReady(page: Page): Promise<void> {
 /**
  * Canvas の中央からの相対座標でクリックする
  * Viewport 1280x720 固定で、左パネル(280px) と右パネル(360px) を避けた安全領域を使用
+ *
+ * SwiftShader 環境でのクリック検出を安定させるため、
+ * マウスを事前に移動させてから mousedown/mouseup を個別に実行する。
  */
 export async function clickMapAtOffset(
   page: Page,
   offsetX: number = 0,
-  offsetY: number = 0
+  offsetY: number = 0,
 ): Promise<void> {
   const canvas = page.locator(MAP_CANVAS)
   const box = await canvas.boundingBox()
@@ -27,10 +30,18 @@ export async function clickMapAtOffset(
   const safeAreaCenterX = 280 + (box.width - 280 - 360) / 2
   const safeAreaCenterY = box.height / 2
 
-  await page.mouse.click(
-    box.x + safeAreaCenterX + offsetX,
-    box.y + safeAreaCenterY + offsetY
-  )
+  const x = box.x + safeAreaCenterX + offsetX
+  const y = box.y + safeAreaCenterY + offsetY
+
+  // マウスを一旦離してからターゲットへ移動し、安定した click イベントを発行
+  await page.mouse.move(0, 0)
+  await page.waitForTimeout(100)
+  await page.mouse.move(x, y)
+  await page.waitForTimeout(200)
+  await page.mouse.down()
+  await page.waitForTimeout(50)
+  await page.mouse.up()
+
   // クリック後の state 更新を待つ
   await page.waitForTimeout(500)
 }

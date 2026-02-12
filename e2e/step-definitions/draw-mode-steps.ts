@@ -4,7 +4,6 @@ import { CustomWorld } from '../support/world.js'
 import {
   MODE_BUTTON_SELECTED,
   modeButtonSelector,
-  HELPER_TEXT,
   DRAFT_SECTION,
 } from '../support/helpers/selectors.js'
 
@@ -48,10 +47,6 @@ Then('選択中のモードが {string} である', async function (this: Custom
   const dataMode = toDataMode(modeName)
   const selected = this.page.locator(MODE_BUTTON_SELECTED)
   await expect(selected).toHaveAttribute('data-mode', dataMode)
-})
-
-Then('ヘルパーテキストが {string} と表示される', async function (this: CustomWorld, expectedText: string) {
-  await expect(this.page.locator(HELPER_TEXT)).toHaveText(expectedText)
 })
 
 Then('ドラフトセクションが表示される', async function (this: CustomWorld) {
