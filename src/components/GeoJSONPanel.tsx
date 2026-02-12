@@ -41,10 +41,7 @@ export function GeoJSONPanel({ featureCollection }: GeoJSONPanelProps) {
     <div className='geojson-panel'>
       <div className='geojson-panel__header'>
         <div className='geojson-panel__title'>GeoJSON</div>
-        <div className='geojson-panel__count'>{featureCollection.features.length}件</div>
-      </div>
-      <div className='geojson-panel__description'>
-        クリックで追加された地物の GeoJSON をリアルタイムで出力しています。コピーして他ツールへ貼り付けてください。
+        <div className='geojson-panel__count'>feature：{featureCollection.features.length}件</div>
       </div>
       <div className='geojson-panel__textarea-wrapper'>
         <textarea

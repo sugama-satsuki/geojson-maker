@@ -32,12 +32,6 @@
   text-transform: uppercase;
 }
 
-.geojson-panel__description {
-  font-size: 12px;
-  line-height: 1.4;
-  color: #555;
-}
-
 .geojson-panel__textarea-wrapper {
   flex: 1;
 }
