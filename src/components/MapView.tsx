@@ -6,6 +6,7 @@ import { DrawMode } from './DrawModeSelector'
 import { DrawControlPanel } from './DrawControlPanel'
 import { GeoJSONPanel } from './GeoJSONPanel'
 import { createPointFeature, createPathFeature, createDraftFeatureCollection } from '../lib/geojson-helpers'
+import { getFeatureCenter } from '../lib/feature-center'
 
 export type FeatureCollection = GeoJSON.FeatureCollection
 
@@ -25,6 +26,7 @@ const HIGHLIGHT_LINE_LAYER_ID = 'geojson-maker-highlight-line'
 const HIGHLIGHT_POLYGON_LAYER_ID = 'geojson-maker-highlight-polygon'
 
 const CLICKABLE_LAYERS = [POINT_LAYER_ID, SYMBOL_LAYER_ID, LINE_LAYER_ID, POLYGON_LAYER_ID]
+const HIGHLIGHT_DURATION_MS = 1500
 
 type PathMode = Extract<DrawMode, 'line' | 'polygon'>
 
@@ -42,10 +44,22 @@ export const MapView: React.FC = () => {
   const [features, setFeatures] = useState<FeatureCollection>({ type: 'FeatureCollection', features: [] })
   const [draftCoords, setDraftCoords] = useState<[number, number][]>([])
   const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null)
+  const [highlightedPanelFeatureId, setHighlightedPanelFeatureId] = useState<string | null>(null)
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isDrawingPath = drawMode === 'line' || drawMode === 'polygon'
   const requiredVertices = drawMode === 'polygon' ? 3 : 2
   const canFinalizeDraft = isDrawingPath && draftCoords.length >= requiredVertices
+
+  // 一時ハイライトを設定するヘルパー
+  const flashHighlight = useCallback((featureId: string, setter: (id: string | null) => void) => {
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current)
+    setter(featureId)
+    highlightTimerRef.current = setTimeout(() => {
+      setter(null)
+      highlightTimerRef.current = null
+    }, HIGHLIGHT_DURATION_MS)
+  }, [])
 
   useEffect(() => {
     setDraftCoords([])
@@ -212,6 +226,8 @@ export const MapView: React.FC = () => {
         const clickedId = hit[0].properties?._id as string | undefined
         if (clickedId) {
           setSelectedFeatureId((prev) => prev === clickedId ? null : clickedId)
+          // 地図クリック → パネル側ハイライト
+          flashHighlight(clickedId, setHighlightedPanelFeatureId)
           return
         }
       }
@@ -235,7 +251,7 @@ export const MapView: React.FC = () => {
     return () => {
       map.off('click', handleClick)
     }
-  }, [map, drawMode])
+  }, [map, drawMode, flashHighlight])
 
   useEffect(() => {
     if (!map) return
@@ -292,6 +308,23 @@ export const MapView: React.FC = () => {
     setSelectedFeatureId(null)
   }, [selectedFeatureId])
 
+  // パネルからフィーチャクリック → 地図中心移動 + ハイライト
+  const handlePanelFeatureClick = useCallback((featureId: string) => {
+    const feature = features.features.find((f) => f.properties?._id === featureId)
+    if (!feature || !map) return
+
+    const center = getFeatureCenter(feature)
+    if (center) {
+      map.flyTo({ center, duration: 300 })
+    }
+
+    // 地図側ハイライト（選択状態 + 0.5秒後に解除）
+    setSelectedFeatureId(featureId)
+    flashHighlight(featureId, (id) => {
+      if (!id) setSelectedFeatureId(null)
+    })
+  }, [features, map, flashHighlight])
+
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
       <div
@@ -314,7 +347,11 @@ export const MapView: React.FC = () => {
         onDeleteFeature={deleteSelectedFeature}
       />
 
-      <GeoJSONPanel featureCollection={features} />
+      <GeoJSONPanel
+        featureCollection={features}
+        highlightedFeatureId={highlightedPanelFeatureId}
+        onFeatureClick={handlePanelFeatureClick}
+      />
     </div>
   )
 }
