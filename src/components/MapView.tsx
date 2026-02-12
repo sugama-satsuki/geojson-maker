@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import type maplibregl from 'maplibre-gl'
 import type { StyleSpecification } from 'maplibre-gl'
 import { useGeoloniaMap } from '../hooks/useGeoloniaMap'
@@ -19,6 +19,12 @@ const DRAFT_SOURCE_ID = 'geojson-maker-draft'
 const DRAFT_LINE_LAYER_ID = 'geojson-maker-draft-line'
 const DRAFT_POINT_LAYER_ID = 'geojson-maker-draft-point'
 const DRAFT_POLYGON_LAYER_ID = 'geojson-maker-draft-polygon'
+const HIGHLIGHT_SOURCE_ID = 'geojson-maker-highlight'
+const HIGHLIGHT_POINT_LAYER_ID = 'geojson-maker-highlight-point'
+const HIGHLIGHT_LINE_LAYER_ID = 'geojson-maker-highlight-line'
+const HIGHLIGHT_POLYGON_LAYER_ID = 'geojson-maker-highlight-polygon'
+
+const CLICKABLE_LAYERS = [POINT_LAYER_ID, SYMBOL_LAYER_ID, LINE_LAYER_ID, POLYGON_LAYER_ID]
 
 type PathMode = Extract<DrawMode, 'line' | 'polygon'>
 
@@ -35,6 +41,7 @@ export const MapView: React.FC = () => {
   const [drawMode, setDrawMode] = useState<DrawMode>('point')
   const [features, setFeatures] = useState<FeatureCollection>({ type: 'FeatureCollection', features: [] })
   const [draftCoords, setDraftCoords] = useState<[number, number][]>([])
+  const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null)
 
   const isDrawingPath = drawMode === 'line' || drawMode === 'polygon'
   const requiredVertices = drawMode === 'polygon' ? 3 : 2
@@ -42,6 +49,7 @@ export const MapView: React.FC = () => {
 
   useEffect(() => {
     setDraftCoords([])
+    setSelectedFeatureId(null)
   }, [drawMode])
 
   useEffect(() => {
@@ -141,19 +149,55 @@ export const MapView: React.FC = () => {
       }
     })
 
+    // ハイライト用ソース＆レイヤー
+    map.addSource(HIGHLIGHT_SOURCE_ID, { type: 'geojson', data: emptyFC })
+
+    map.addLayer({
+      id: HIGHLIGHT_POLYGON_LAYER_ID,
+      type: 'line',
+      source: HIGHLIGHT_SOURCE_ID,
+      filter: ['==', ['geometry-type'], 'Polygon'],
+      paint: {
+        'line-color': '#ff0000',
+        'line-width': 3,
+        'line-dasharray': [3, 2]
+      }
+    })
+
+    map.addLayer({
+      id: HIGHLIGHT_LINE_LAYER_ID,
+      type: 'line',
+      source: HIGHLIGHT_SOURCE_ID,
+      filter: ['==', ['geometry-type'], 'LineString'],
+      paint: {
+        'line-color': '#ff0000',
+        'line-width': 5
+      }
+    })
+
+    map.addLayer({
+      id: HIGHLIGHT_POINT_LAYER_ID,
+      type: 'circle',
+      source: HIGHLIGHT_SOURCE_ID,
+      filter: ['==', ['geometry-type'], 'Point'],
+      paint: {
+        'circle-radius': 10,
+        'circle-color': 'rgba(255, 0, 0, 0.3)',
+        'circle-stroke-color': '#ff0000',
+        'circle-stroke-width': 2
+      }
+    })
+
     return () => {
-      ;[DRAFT_POINT_LAYER_ID, DRAFT_LINE_LAYER_ID, DRAFT_POLYGON_LAYER_ID,
+      ;[HIGHLIGHT_POINT_LAYER_ID, HIGHLIGHT_LINE_LAYER_ID, HIGHLIGHT_POLYGON_LAYER_ID,
+        DRAFT_POINT_LAYER_ID, DRAFT_LINE_LAYER_ID, DRAFT_POLYGON_LAYER_ID,
         SYMBOL_LAYER_ID, POINT_LAYER_ID, LINE_LAYER_ID, POLYGON_LAYER_ID].forEach((layerId) => {
         if (map.getLayer(layerId)) {
           map.removeLayer(layerId)
         }
       })
-      if (map.getSource(DRAFT_SOURCE_ID)) {
-        map.removeSource(DRAFT_SOURCE_ID)
-      }
-      const source = map.getSource(SOURCE_ID)
-      if (source) {
-        map.removeSource(SOURCE_ID)
+      for (const srcId of [HIGHLIGHT_SOURCE_ID, DRAFT_SOURCE_ID, SOURCE_ID]) {
+        if (map.getSource(srcId)) map.removeSource(srcId)
       }
     }
   }, [map])
@@ -162,6 +206,18 @@ export const MapView: React.FC = () => {
     if (!map) return
 
     const handleClick = (event: maplibregl.MapMouseEvent) => {
+      // 既存地物をクリックしたか判定
+      const hit = map.queryRenderedFeatures(event.point, { layers: CLICKABLE_LAYERS })
+      if (hit.length > 0) {
+        const clickedId = hit[0].properties?._id as string | undefined
+        if (clickedId) {
+          setSelectedFeatureId((prev) => prev === clickedId ? null : clickedId)
+          return
+        }
+      }
+
+      // 地物未クリック → 選択解除して通常の描画処理
+      setSelectedFeatureId(null)
       const coordinate: [number, number] = [event.lngLat.lng, event.lngLat.lat]
 
       if (drawMode === 'point' || drawMode === 'symbol') {
@@ -200,6 +256,22 @@ export const MapView: React.FC = () => {
     }
   }, [map, draftCoords, drawMode, isDrawingPath])
 
+  // ハイライト表示更新
+  useEffect(() => {
+    if (!map) return
+    const source = map.getSource(HIGHLIGHT_SOURCE_ID) as maplibregl.GeoJSONSource | undefined
+    if (!source || typeof source.setData !== 'function') return
+    const emptyFC: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
+    if (selectedFeatureId) {
+      const selected = features.features.find((f) => f.properties?._id === selectedFeatureId)
+      if (selected) {
+        source.setData({ type: 'FeatureCollection', features: [selected] })
+        return
+      }
+    }
+    source.setData(emptyFC)
+  }, [map, selectedFeatureId, features])
+
   const finalizeDraft = () => {
     if (!isDrawingPath || !canFinalizeDraft) return
     const pathMode = drawMode as PathMode
@@ -211,7 +283,14 @@ export const MapView: React.FC = () => {
     setDraftCoords([])
   }
 
-  const clearDraft = () => setDraftCoords([])
+  const deleteSelectedFeature = useCallback(() => {
+    if (!selectedFeatureId) return
+    setFeatures((prev) => ({
+      ...prev,
+      features: prev.features.filter((f) => f.properties?._id !== selectedFeatureId)
+    }))
+    setSelectedFeatureId(null)
+  }, [selectedFeatureId])
 
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
@@ -228,12 +307,11 @@ export const MapView: React.FC = () => {
       <DrawControlPanel
         drawMode={drawMode}
         isDrawingPath={isDrawingPath}
-        draftCount={draftCoords.length}
         canFinalizeDraft={canFinalizeDraft}
+        hasSelectedFeature={selectedFeatureId !== null}
         onChangeMode={setDrawMode}
         onFinalize={finalizeDraft}
-        onClearDraft={clearDraft}
-        featuresCount={features.features.length}
+        onDeleteFeature={deleteSelectedFeature}
       />
 
       <GeoJSONPanel featureCollection={features} />

@@ -13,7 +13,6 @@ export const modeButtonSelector = (dataMode: string) =>
 export const DRAW_CONTROL_PANEL = '.draw-control-panel'
 export const DELETE_ACTION_BUTTON = '.draw-control-panel__action-button--delete'
 export const CONFIRM_ACTION_BUTTON = '.draw-control-panel__action-button--confirm'
-export const FEATURES_COUNT = '.draw-control-panel__count'
 
 /** GeoJSON パネル */
 export const GEOJSON_PANEL = '.geojson-panel'

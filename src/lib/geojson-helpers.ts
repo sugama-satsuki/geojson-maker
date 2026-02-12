@@ -2,6 +2,11 @@ import { DrawMode } from '../components/DrawModeSelector'
 
 type PathMode = Extract<DrawMode, 'line' | 'polygon'>
 
+let featureIdCounter = 0
+export function nextFeatureId(): string {
+  return `f-${++featureIdCounter}`
+}
+
 export function closePolygonRing(vertices: [number, number][]): [number, number][] {
   if (vertices.length === 0) return []
   const first = vertices[0]
@@ -18,6 +23,7 @@ export function createPointFeature(coordinate: [number, number], mode: DrawMode)
       coordinates: coordinate
     },
     properties: {
+      _id: nextFeatureId(),
       drawMode: mode
     }
   }
@@ -85,7 +91,9 @@ export function createPathFeature(vertices: [number, number][], mode: PathMode):
     type: 'Feature',
     geometry,
     properties: {
+      _id: nextFeatureId(),
       drawMode: mode
     }
   }
 }
+
