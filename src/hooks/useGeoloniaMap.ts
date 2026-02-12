@@ -45,7 +45,13 @@ export function useGeoloniaMap(
       center: center,
       zoom: zoom,
       hash: true,
+      attributionControl: false,
     });
+
+    mapObj.addControl(
+      new maplibregl.AttributionControl({ compact: true }),
+      'bottom-left'
+    );
 
     mapObj.once('load', () => {
       prevStyleRef.current = options.style;
