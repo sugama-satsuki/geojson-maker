@@ -5,6 +5,8 @@ export class CustomWorld extends World {
   browser!: Browser
   context!: BrowserContext
   page!: Page
+  panelInitialX!: number
+  panelInitialY!: number
 
   constructor(options: IWorldOptions) {
     super(options)

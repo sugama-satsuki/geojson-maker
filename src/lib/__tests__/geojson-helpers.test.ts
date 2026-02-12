@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { closePolygonRing, createPointFeature, createPathFeature, createDraftFeatureCollection } from '../geojson-helpers'
 
+const ID_PATTERN = expect.stringMatching(/^f-\d+$/)
+
 describe('closePolygonRing', () => {
   it('空配列を渡すと空配列を返す', () => {
     expect(closePolygonRing([])).toEqual([])
@@ -50,6 +52,7 @@ describe('createPointFeature', () => {
         coordinates: [139.767, 35.681],
       },
       properties: {
+        _id: ID_PATTERN,
         drawMode: 'point',
       },
     })
@@ -57,7 +60,7 @@ describe('createPointFeature', () => {
 
   it('mode="symbol" で drawMode プロパティが symbol になる', () => {
     const result = createPointFeature([0, 0], 'symbol')
-    expect(result.properties).toEqual({ drawMode: 'symbol' })
+    expect(result.properties).toEqual({ _id: ID_PATTERN, drawMode: 'symbol' })
   })
 })
 
@@ -78,6 +81,7 @@ describe('createPathFeature', () => {
         ],
       },
       properties: {
+        _id: ID_PATTERN,
         drawMode: 'line',
       },
     })
@@ -104,6 +108,7 @@ describe('createPathFeature', () => {
         ],
       },
       properties: {
+        _id: ID_PATTERN,
         drawMode: 'polygon',
       },
     })

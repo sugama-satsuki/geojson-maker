@@ -11,6 +11,7 @@ export const modeButtonSelector = (dataMode: string) =>
 
 /** 描画コントロールパネル */
 export const DRAW_CONTROL_PANEL = '.draw-control-panel'
+export const DRAW_CONTROL_GRIP = '.draw-control-panel__grip'
 export const DELETE_ACTION_BUTTON = '.draw-control-panel__action-button--delete'
 export const CONFIRM_ACTION_BUTTON = '.draw-control-panel__action-button--confirm'
 
