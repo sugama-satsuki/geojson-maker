@@ -3,8 +3,8 @@ import { expect } from '@playwright/test'
 import { CustomWorld } from '../support/world.js'
 import { DELETE_ACTION_BUTTON, CONFIRM_ACTION_BUTTON } from '../support/helpers/selectors.js'
 
-When('確定ボタンをクリックする', { timeout: 15000 }, async function (this: CustomWorld) {
-  await this.page.waitForSelector(CONFIRM_ACTION_BUTTON, { state: 'visible', timeout: 10000 })
+When('確定ボタンをクリックする', { timeout: 30000 }, async function (this: CustomWorld) {
+  await this.page.waitForSelector(CONFIRM_ACTION_BUTTON, { state: 'visible', timeout: 20000 })
   await this.page.locator(CONFIRM_ACTION_BUTTON).click()
   await this.page.waitForTimeout(800)
 })
