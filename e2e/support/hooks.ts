@@ -14,6 +14,20 @@ let viteProcess: ChildProcess
 let sharedBrowser: Browser
 
 /**
+ * ベースマップを描画しない最小スタイル。
+ * タイルの読み込み・WebGL 描画をスキップし、CI の SwiftShader 環境でも即座にロードする。
+ * テスト対象（描画操作・GeoJSON 出力）には影響しない。
+ */
+const BLANK_STYLE = JSON.stringify({
+  version: 8,
+  name: 'Blank',
+  sources: {},
+  layers: [
+    { id: 'background', type: 'background', paint: { 'background-color': '#f0f0f0' } },
+  ],
+})
+
+/**
  * テスト全体の前に Vite サーバとブラウザを起動する
  */
 BeforeAll({ timeout: 60000 }, async function () {
@@ -79,6 +93,12 @@ Before({ timeout: 60000 }, async function (this: CustomWorld) {
     permissions: ['clipboard-read', 'clipboard-write'],
   })
   this.page = await this.context.newPage()
+
+  // ベースマップのスタイルを空に差し替え（タイル描画の負荷を排除）
+  await this.page.route(/style\.json/, (route) =>
+    route.fulfill({ contentType: 'application/json', body: BLANK_STYLE }),
+  )
+
   await this.page.goto(APP_URL)
   await this.page.waitForSelector(DRAW_CONTROL_PANEL, { state: 'visible', timeout: 30000 })
   await waitForMapReady(this.page)
