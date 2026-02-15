@@ -59,7 +59,7 @@ export function GeoJSONPanel({ featureCollection, highlightedFeatureId, onFeatur
     <div className='geojson-panel'>
       <div className='geojson-panel__header'>
         <div className='geojson-panel__title'>GeoJSON</div>
-        <div className='geojson-panel__count'>{featureCollection.features.length}件</div>
+        <div className='geojson-panel__count'>feature：{featureCollection.features.length}件</div>
       </div>
 
       {featureCollection.features.length > 0 && (
