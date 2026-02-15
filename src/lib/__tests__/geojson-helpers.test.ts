@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { closePolygonRing, createPointFeature, createPathFeature, createDraftFeatureCollection } from '../geojson-helpers'
 
+// _id のカウンターはモジュールレベルなので、各テストで expect.stringMatching で検証
 const ID_PATTERN = expect.stringMatching(/^f-\d+$/)
 
 describe('closePolygonRing', () => {

@@ -2,12 +2,11 @@ import { Page } from '@playwright/test'
 import { MAP_CANVAS, GEOJSON_TEXTAREA } from './selectors.js'
 
 /**
- * 地図の描画完了を待機する
+ * 地図の描画完了を待機する（window.__mapReady フラグをポーリング）
  */
 export async function waitForMapReady(page: Page): Promise<void> {
   await page.waitForSelector(MAP_CANVAS, { state: 'visible', timeout: 30000 })
-  // Canvas が実際に描画されるまで少し待つ
-  await page.waitForTimeout(2000)
+  await page.waitForFunction('window.__mapReady === true', { timeout: 30000 })
 }
 
 /**
@@ -35,15 +34,15 @@ export async function clickMapAtOffset(
 
   // マウスを一旦離してからターゲットへ移動し、安定した click イベントを発行
   await page.mouse.move(0, 0)
-  await page.waitForTimeout(100)
+  await page.waitForTimeout(50)
   await page.mouse.move(x, y)
-  await page.waitForTimeout(200)
+  await page.waitForTimeout(100)
   await page.mouse.down()
   await page.waitForTimeout(50)
   await page.mouse.up()
 
   // クリック後の state 更新を待つ
-  await page.waitForTimeout(500)
+  await page.waitForTimeout(300)
 }
 
 /**

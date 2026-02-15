@@ -14,6 +14,7 @@ export type GeoloniaMapSettings = {
 
 declare global {
   interface Window {
+    __mapReady?: boolean;
     geolonia: {
       Popup: new (options?: maplibregl.PopupOptions) => maplibregl.Popup;
       Map: new (options: maplibregl.MapOptions) => maplibregl.Map;
@@ -55,6 +56,7 @@ export function useGeoloniaMap(
 
     mapObj.once('load', () => {
       prevStyleRef.current = options.style;
+      window.__mapReady = true;
       setMap(mapObj);
     });
 
