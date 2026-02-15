@@ -1,7 +1,5 @@
 .draw-control-panel {
   position: absolute;
-  top: 10px;
-  left: 10px;
   width: 68px;
   box-sizing: border-box;
   padding: 12px;

@@ -1,4 +1,6 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { DrawMode, DrawModeSelector } from './DrawModeSelector'
+import { clampPosition } from '../lib/clamp-position'
 import './DrawControlPanel.css'
 
 type DrawControlPanelProps = {
@@ -11,6 +13,8 @@ type DrawControlPanelProps = {
   onDeleteFeature: () => void
 }
 
+const INITIAL_POSITION = { x: 10, y: 10 }
+
 export function DrawControlPanel({
   drawMode,
   isDrawingPath,
@@ -20,8 +24,68 @@ export function DrawControlPanel({
   onFinalize,
   onDeleteFeature,
 }: DrawControlPanelProps) {
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [position, setPosition] = useState(INITIAL_POSITION)
+  const isDraggingRef = useRef(false)
+  const dragOffsetRef = useRef({ x: 0, y: 0 })
+
+  const onGripMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    isDraggingRef.current = true
+    dragOffsetRef.current = {
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    }
+  }, [position])
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current || !panelRef.current) return
+      const raw = {
+        x: e.clientX - dragOffsetRef.current.x,
+        y: e.clientY - dragOffsetRef.current.y,
+      }
+      const rect = panelRef.current.getBoundingClientRect()
+      const clamped = clampPosition(
+        raw,
+        { width: rect.width, height: rect.height },
+        { width: window.innerWidth, height: window.innerHeight },
+      )
+      setPosition(clamped)
+    }
+
+    const onMouseUp = () => {
+      isDraggingRef.current = false
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [])
+
   return (
-    <div className='draw-control-panel'>
+    <div
+      ref={panelRef}
+      className='draw-control-panel'
+      style={{ left: position.x, top: position.y }}
+    >
+      <div
+        className='draw-control-panel__grip'
+        onMouseDown={onGripMouseDown}
+        title='ドラッグで移動'
+      >
+        <svg viewBox="0 0 24 8" fill="currentColor">
+          <circle cx="6" cy="2" r="1.5" />
+          <circle cx="12" cy="2" r="1.5" />
+          <circle cx="18" cy="2" r="1.5" />
+          <circle cx="6" cy="6" r="1.5" />
+          <circle cx="12" cy="6" r="1.5" />
+          <circle cx="18" cy="6" r="1.5" />
+        </svg>
+      </div>
       <DrawModeSelector selectedMode={drawMode} onChange={onChangeMode} />
       <button
         type='button'
