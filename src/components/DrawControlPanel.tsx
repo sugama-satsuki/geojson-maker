@@ -11,6 +11,7 @@ type DrawControlPanelProps = {
   onChangeMode: (mode: DrawMode) => void
   onFinalize: () => void
   onDeleteFeature: () => void
+  onResetGeoJSON: () => void
 }
 
 const INITIAL_POSITION = { x: 10, y: 10 }
@@ -23,6 +24,7 @@ export function DrawControlPanel({
   onChangeMode,
   onFinalize,
   onDeleteFeature,
+  onResetGeoJSON,
 }: DrawControlPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState(INITIAL_POSITION)
@@ -97,6 +99,19 @@ export function DrawControlPanel({
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="3 6 5 6 21 6" />
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        </svg>
+      </button>
+      <button
+        type='button'
+        onClick={onResetGeoJSON}
+        title='GeoJSONを初期化'
+        aria-label='GeoJSONを初期化'
+        className='draw-control-panel__action-button draw-control-panel__action-button--reset'
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M7 13a5.5 5.5 0 1 1 6.43 5" />
+          <path d="M15.25 7.25 12 4 8.75 7.25" />
+          <path d="M12 4v6" />
         </svg>
       </button>
       {isDrawingPath && (
