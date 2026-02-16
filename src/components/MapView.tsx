@@ -7,6 +7,7 @@ import { DrawControlPanel } from './DrawControlPanel'
 import { GeoJSONPanel } from './GeoJSONPanel'
 import { createPointFeature, createPathFeature, createDraftFeatureCollection } from '../lib/geojson-helpers'
 import { getFeatureCenter } from '../lib/feature-center'
+import { mergeUserProperties } from '../lib/property-helpers'
 
 export type FeatureCollection = GeoJSON.FeatureCollection
 
@@ -308,6 +309,16 @@ export const MapView: React.FC = () => {
     setSelectedFeatureId(null)
   }, [selectedFeatureId])
 
+  const updateFeatureProperties = useCallback((featureId: string, userProperties: Record<string, string>) => {
+    setFeatures((prev) => ({
+      ...prev,
+      features: prev.features.map((f) => {
+        if (f.properties?._id !== featureId) return f
+        return { ...f, properties: mergeUserProperties(f.properties, userProperties) }
+      }),
+    }))
+  }, [])
+
   // パネルからフィーチャクリック → 地図中心移動 + ハイライト
   const handlePanelFeatureClick = useCallback((featureId: string) => {
     const feature = features.features.find((f) => f.properties?._id === featureId)
@@ -351,6 +362,7 @@ export const MapView: React.FC = () => {
         featureCollection={features}
         highlightedFeatureId={highlightedPanelFeatureId}
         onFeatureClick={handlePanelFeatureClick}
+        onUpdateFeatureProperties={updateFeatureProperties}
       />
     </div>
   )

@@ -22,3 +22,11 @@ export const GEOJSON_PANEL_COUNT = '.geojson-panel__count'
 export const GEOJSON_PANEL_BUTTON = '.geojson-panel__button'
 export const GEOJSON_FEATURE_ITEM = '.geojson-panel__feature-item'
 export const GEOJSON_FEATURE_ITEM_HIGHLIGHTED = '.geojson-panel__feature-item--highlighted'
+
+/** プロパティエディタ */
+export const FEATURE_PROPS_EDITOR = '[data-testid="feature-props-editor"]'
+export const PROP_KEY_INPUT = '[data-testid="prop-key-input"]'
+export const PROP_VALUE_INPUT = '[data-testid="prop-value-input"]'
+export const PROP_ADD_BUTTON = '[data-testid="prop-add-button"]'
+export const propDeleteButton = (key: string) => `[data-testid="prop-delete-${key}"]`
+export const propValueInput = (key: string) => `[data-testid="prop-value-${key}"]`
