@@ -36,8 +36,24 @@ export function DrawControlPanel({
   const isDraggingRef = useRef(false)
   const dragOffsetRef = useRef({ x: 0, y: 0 })
   const [isImportHovered, setIsImportHovered] = useState(false)
+  const importHoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const csvFileInputRef = useRef<HTMLInputElement>(null)
   const geojsonFileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImportMouseEnter = useCallback(() => {
+    if (importHoverTimerRef.current) {
+      clearTimeout(importHoverTimerRef.current)
+      importHoverTimerRef.current = null
+    }
+    setIsImportHovered(true)
+  }, [])
+
+  const handleImportMouseLeave = useCallback(() => {
+    importHoverTimerRef.current = setTimeout(() => {
+      setIsImportHovered(false)
+      importHoverTimerRef.current = null
+    }, 200)
+  }, [])
 
   const onGripMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -151,8 +167,8 @@ export function DrawControlPanel({
       </button>
       <div
         className='draw-control-panel__import-wrapper'
-        onMouseEnter={() => setIsImportHovered(true)}
-        onMouseLeave={() => setIsImportHovered(false)}
+        onMouseEnter={handleImportMouseEnter}
+        onMouseLeave={handleImportMouseLeave}
       >
         <button
           type='button'
