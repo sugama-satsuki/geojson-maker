@@ -145,9 +145,8 @@ export function DrawControlPanel({
         className='draw-control-panel__action-button draw-control-panel__action-button--reset'
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M7 13a5.5 5.5 0 1 1 6.43 5" />
-          <path d="M15.25 7.25 12 4 8.75 7.25" />
-          <path d="M12 4v6" />
+          <polyline points="1 4 1 10 7 10" />
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
         </svg>
       </button>
       <div
