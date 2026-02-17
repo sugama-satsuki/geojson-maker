@@ -46,6 +46,33 @@ export async function clickMapAtOffset(
 }
 
 /**
+ * Canvas の中央からの相対座標で右クリック（contextmenu）する
+ */
+export async function rightClickMapAtOffset(
+  page: Page,
+  offsetX: number = 0,
+  offsetY: number = 0,
+): Promise<void> {
+  const canvas = page.locator(MAP_CANVAS)
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error('Canvas が見つかりません')
+
+  const safeAreaCenterX = 280 + (box.width - 280 - 360) / 2
+  const safeAreaCenterY = box.height / 2
+
+  const x = box.x + safeAreaCenterX + offsetX
+  const y = box.y + safeAreaCenterY + offsetY
+
+  await page.mouse.move(0, 0)
+  await page.waitForTimeout(50)
+  await page.mouse.move(x, y)
+  await page.waitForTimeout(100)
+  await page.mouse.click(x, y, { button: 'right' })
+
+  await page.waitForTimeout(300)
+}
+
+/**
  * GeoJSON パネルのテキストエリアから FeatureCollection をパースして返す
  */
 export async function getGeoJSONFromPanel(page: Page): Promise<GeoJSON.FeatureCollection> {
