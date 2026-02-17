@@ -23,6 +23,10 @@ export const GEOJSON_PANEL_BUTTON = '.geojson-panel__button'
 export const GEOJSON_FEATURE_ITEM = '.geojson-panel__feature-item'
 export const GEOJSON_FEATURE_ITEM_HIGHLIGHTED = '.geojson-panel__feature-item--highlighted'
 
+/** コンテキストメニュー */
+export const FEATURE_CONTEXT_MENU = '.feature-context-menu'
+export const FEATURE_CONTEXT_MENU_ITEM = '.feature-context-menu__item'
+
 /** インポート */
 export const IMPORT_ACTION_BUTTON = '.draw-control-panel__action-button--import'
 export const IMPORT_POPUP_BTN = '.draw-control-panel__import-popup-btn'
