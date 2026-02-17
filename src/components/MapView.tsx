@@ -5,6 +5,7 @@ import { useGeoloniaMap } from '../hooks/useGeoloniaMap'
 import { DrawMode } from './DrawModeSelector'
 import { DrawControlPanel } from './DrawControlPanel'
 import { GeoJSONPanel } from './GeoJSONPanel'
+import { FeatureContextMenu } from './FeatureContextMenu'
 import { createPointFeature, createPathFeature, createDraftFeatureCollection, nextFeatureId } from '../lib/geojson-helpers'
 import { getFeatureCenter } from '../lib/feature-center'
 import { parseCSV } from '../lib/csv-helpers'
@@ -47,6 +48,9 @@ export const MapView: React.FC = () => {
   const [draftCoords, setDraftCoords] = useState<[number, number][]>([])
   const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null)
   const [highlightedPanelFeatureId, setHighlightedPanelFeatureId] = useState<string | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ feature: GeoJSON.Feature; x: number; y: number } | null>(null)
+  const featuresRef = useRef(features)
+  featuresRef.current = features
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isDrawingPath = drawMode === 'line' || drawMode === 'polygon'
@@ -66,6 +70,7 @@ export const MapView: React.FC = () => {
   useEffect(() => {
     setDraftCoords([])
     setSelectedFeatureId(null)
+    setContextMenu(null)
   }, [drawMode])
 
   useEffect(() => {
@@ -222,6 +227,7 @@ export const MapView: React.FC = () => {
     if (!map) return
 
     const handleClick = (event: maplibregl.MapMouseEvent) => {
+      setContextMenu(null)
       // 既存地物をクリックしたか判定
       const hit = map.queryRenderedFeatures(event.point, { layers: CLICKABLE_LAYERS })
       if (hit.length > 0) {
@@ -249,9 +255,31 @@ export const MapView: React.FC = () => {
       setDraftCoords((prev) => [...prev, coordinate])
     }
 
+    const handleContextMenu = (event: maplibregl.MapMouseEvent) => {
+      const hit = map.queryRenderedFeatures(event.point, { layers: CLICKABLE_LAYERS })
+      if (hit.length > 0) {
+        const clickedId = hit[0].properties?._id as string | undefined
+        if (clickedId) {
+          const found = featuresRef.current.features.find((f) => f.properties?._id === clickedId)
+          if (found) {
+            event.preventDefault()
+            setContextMenu({
+              feature: found,
+              x: event.originalEvent.clientX,
+              y: event.originalEvent.clientY,
+            })
+            return
+          }
+        }
+      }
+      setContextMenu(null)
+    }
+
     map.on('click', handleClick)
+    map.on('contextmenu', handleContextMenu)
     return () => {
       map.off('click', handleClick)
+      map.off('contextmenu', handleContextMenu)
     }
   }, [map, drawMode, flashHighlight])
 
@@ -410,6 +438,14 @@ export const MapView: React.FC = () => {
         onFeatureClick={handlePanelFeatureClick}
         onUpdateFeatureProperties={updateFeatureProperties}
       />
+
+      {contextMenu && (
+        <FeatureContextMenu
+          feature={contextMenu.feature}
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   )
 }
