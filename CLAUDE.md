@@ -2,8 +2,15 @@
 
 ## プロジェクト概要
 
-GeoJSON Maker — MapLibre GL (Geolonia) を使った GeoJSON 作図 Web アプリ。
+GeoJSON Maker — [Geolonia Map](https://maps.geolonia.com/) を使った GeoJSON 作図 Web アプリ。
 React + TypeScript + Vite。
+
+### 地図の実装
+
+- 地図は **Geolonia Map** (https://maps.geolonia.com/) を使用
+- Geolonia Map は MapLibre GL JS ベースの地図サービス
+- スタイル: `geolonia/basic` (`https://smartmap.styles.geoloniamaps.com/style.json`)
+- 地図コンポーネントの初期化は `src/hooks/useGeoloniaMap.ts` で行う
 
 ## コマンド
 
