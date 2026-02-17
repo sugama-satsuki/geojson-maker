@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FeaturePropertiesEditor } from './FeaturePropertiesEditor'
 import './GeoJSONPanel.css'
 
 const GEOM_TYPE_LABEL: Record<string, string> = {
@@ -12,13 +13,21 @@ type GeoJSONPanelProps = {
   highlightedFeatureId: string | null
   onFeatureClick: (featureId: string) => void
   onImportCSV: (text: string) => void
+  onUpdateFeatureProperties: (featureId: string, userProperties: Record<string, string>) => void
 }
 
-export function GeoJSONPanel({ featureCollection, highlightedFeatureId, onFeatureClick, onImportCSV }: GeoJSONPanelProps) {
+export function GeoJSONPanel({
+  featureCollection,
+  highlightedFeatureId,
+  onFeatureClick,
+  onImportCSV,
+  onUpdateFeatureProperties,
+}: GeoJSONPanelProps) {
   const jsonValue = useMemo(() => JSON.stringify(featureCollection, null, 2), [featureCollection])
   const [copied, setCopied] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
   const [imported, setImported] = useState(false)
+  const [expandedFeatureId, setExpandedFeatureId] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -30,6 +39,15 @@ export function GeoJSONPanel({ featureCollection, highlightedFeatureId, onFeatur
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
   }, [highlightedFeatureId])
+
+  // 展開中のフィーチャが削除されたら閉じる
+  useEffect(() => {
+    if (!expandedFeatureId) return
+    const exists = featureCollection.features.some(
+      (f) => f.properties?._id === expandedFeatureId,
+    )
+    if (!exists) setExpandedFeatureId(null)
+  }, [featureCollection, expandedFeatureId])
 
   const copyToClipboard = async () => {
     try {
@@ -73,6 +91,11 @@ export function GeoJSONPanel({ featureCollection, highlightedFeatureId, onFeatur
     setTimeout(() => setDownloaded(false), 1600)
   }
 
+  const handleFeatureItemClick = (fid: string) => {
+    setExpandedFeatureId((prev) => (prev === fid ? null : fid))
+    onFeatureClick(fid)
+  }
+
   return (
     <div className='geojson-panel'>
       <div className='geojson-panel__header'>
@@ -87,17 +110,26 @@ export function GeoJSONPanel({ featureCollection, highlightedFeatureId, onFeatur
             if (!fid) return null
             const geomLabel = GEOM_TYPE_LABEL[f.geometry.type] ?? f.geometry.type
             const isHighlighted = fid === highlightedFeatureId
+            const isExpanded = fid === expandedFeatureId
             return (
-              <button
-                key={fid}
-                type='button'
-                data-feature-id={fid}
-                className={`geojson-panel__feature-item${isHighlighted ? ' geojson-panel__feature-item--highlighted' : ''}`}
-                onClick={() => onFeatureClick(fid)}
-              >
-                <span className='geojson-panel__feature-index'>{i + 1}</span>
-                <span className='geojson-panel__feature-type'>{geomLabel}</span>
-              </button>
+              <div key={fid} className='geojson-panel__feature-wrapper'>
+                <button
+                  type='button'
+                  data-feature-id={fid}
+                  className={`geojson-panel__feature-item${isHighlighted ? ' geojson-panel__feature-item--highlighted' : ''}${isExpanded ? ' geojson-panel__feature-item--expanded' : ''}`}
+                  onClick={() => handleFeatureItemClick(fid)}
+                >
+                  <span className='geojson-panel__expand-icon'>{isExpanded ? '▾' : '▸'}</span>
+                  <span className='geojson-panel__feature-index'>{i + 1}</span>
+                  <span className='geojson-panel__feature-type'>{geomLabel}</span>
+                </button>
+                {isExpanded && (
+                  <FeaturePropertiesEditor
+                    properties={f.properties}
+                    onUpdate={(userProps) => onUpdateFeatureProperties(fid, userProps)}
+                  />
+                )}
+              </div>
             )
           })}
         </div>

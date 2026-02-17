@@ -16,13 +16,8 @@ declare global {
   interface Window {
     __mapReady?: boolean;
     geolonia: {
-      Popup: new (options?: maplibregl.PopupOptions) => maplibregl.Popup;
       Map: new (options: maplibregl.MapOptions) => maplibregl.Map;
-      GeolocateControl: new (options: maplibregl.GeolocateControlOptions) => maplibregl.GeolocateControl;
-      NavigationControl: new (options?: maplibregl.NavigationControlOptions) => maplibregl.NavigationControl;
-      Marker: new (options?: maplibregl.MarkerOptions) => maplibregl.Marker;
     };
-    map?: maplibregl.Map; // Extend Window to include the map property
   }
 }
 
@@ -38,9 +33,9 @@ export function useGeoloniaMap(
 
     const center = map?.getCenter() || [139.767, 35.681] as [number, number];
     const zoom = map?.getZoom() || 10;
-    console.log(options.style);
-    // mapオブジェクトがなければ新規生成
-    const mapObj = new maplibregl.Map({
+
+    const MapConstructor = window.geolonia?.Map ?? maplibregl.Map;
+    const mapObj = new MapConstructor({
       container: containerRef.current,
       style: options.style,
       center: center,
@@ -63,7 +58,7 @@ export function useGeoloniaMap(
     return () => {
       mapObj.remove();
     };
-    
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerRef, setMap, options?.style]);
 

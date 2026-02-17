@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { closePolygonRing, createPointFeature, createPathFeature, createDraftFeatureCollection } from '../geojson-helpers'
 
 // _id のカウンターはモジュールレベルなので、各テストで expect.stringMatching で検証
-const ID_PATTERN = expect.stringMatching(/^f-\d+$/)
+const ID_PATTERN = expect.stringMatching(/^geolonia-\d+$/)
 
 describe('closePolygonRing', () => {
   it('空配列を渡すと空配列を返す', () => {

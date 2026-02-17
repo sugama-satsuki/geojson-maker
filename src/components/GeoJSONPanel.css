@@ -85,9 +85,14 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 120px;
+  max-height: 300px;
   overflow-y: auto;
   padding: 8px 14px;
+}
+
+.geojson-panel__feature-wrapper {
+  display: flex;
+  flex-direction: column;
 }
 
 .geojson-panel__feature-item {
@@ -101,6 +106,8 @@
   cursor: pointer;
   font-size: 13px;
   text-align: left;
+  width: 100%;
+  box-sizing: border-box;
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
@@ -123,9 +130,25 @@
   animation: feature-flash 0.5s ease-out;
 }
 
+.geojson-panel__feature-item--expanded {
+  background: linear-gradient(
+    135deg,
+    rgba(26, 115, 232, 0.08) 0%,
+    rgba(124, 58, 237, 0.06) 100%
+  );
+  border-color: rgba(26, 115, 232, 0.3);
+  border-radius: 8px 8px 0 0;
+}
+
 @keyframes feature-flash {
   0% { background: rgba(124, 58, 237, 0.25); }
   100% { background: rgba(124, 58, 237, 0.1); }
+}
+
+.geojson-panel__expand-icon {
+  font-size: 10px;
+  color: #94a3b8;
+  min-width: 10px;
 }
 
 .geojson-panel__feature-index {
@@ -141,53 +164,109 @@
   color: #64748b;
 }
 
-.geojson-panel__feature-list {
+/* --- Feature Properties Editor --- */
+
+.feature-props-editor {
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 120px;
-  overflow-y: auto;
 }
 
-.geojson-panel__feature-item {
+.feature-props-editor__row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 6px;
+  gap: 4px;
+}
+
+.feature-props-editor__key {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-purple);
+  min-width: 60px;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feature-props-editor__value-input,
+.feature-props-editor__key-input,
+.feature-props-editor__new-value-input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  border-radius: 4px;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #fff;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-family: var(--font-code);
+  color: #1e293b;
+  transition: border-color var(--transition-fast);
+}
+
+.feature-props-editor__value-input:focus,
+.feature-props-editor__key-input:focus,
+.feature-props-editor__new-value-input:focus {
+  outline: none;
+  border-color: var(--color-purple);
+}
+
+.feature-props-editor__key-input {
+  max-width: 80px;
+}
+
+.feature-props-editor__delete-btn,
+.feature-props-editor__add-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.6);
   cursor: pointer;
-  font-size: 13px;
-  transition: background 0.15s ease, border-color 0.15s ease;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
-.geojson-panel__feature-item:hover {
-  background: #eef4ff;
-  border-color: #1a73e8;
+.feature-props-editor__delete-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: var(--color-danger);
 }
 
-.geojson-panel__feature-item--highlighted {
-  background: #fff3cd;
-  border-color: #ffb400;
-  animation: feature-flash 0.5s ease-out;
+.feature-props-editor__add-btn:hover {
+  background: rgba(26, 115, 232, 0.08);
+  border-color: rgba(26, 115, 232, 0.4);
+  color: var(--color-blue);
 }
 
-@keyframes feature-flash {
-  0% { background: #ffe066; }
-  100% { background: #fff3cd; }
+.feature-props-editor__add-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 2px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
 }
 
-.geojson-panel__feature-index {
-  font-weight: 700;
-  color: #1a73e8;
-  min-width: 20px;
+.feature-props-editor__error {
+  font-size: 11px;
+  color: var(--color-danger);
+  padding: 2px 0;
 }
 
-.geojson-panel__feature-type {
-  color: #555;
-}
+/* --- Textarea & Buttons --- */
 
 .geojson-panel__textarea-wrapper {
   flex: 1;

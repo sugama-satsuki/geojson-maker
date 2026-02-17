@@ -8,6 +8,7 @@ import { GeoJSONPanel } from './GeoJSONPanel'
 import { createPointFeature, createPathFeature, createDraftFeatureCollection, nextFeatureId } from '../lib/geojson-helpers'
 import { getFeatureCenter } from '../lib/feature-center'
 import { parseCSV } from '../lib/csv-helpers'
+import { mergeUserProperties } from '../lib/property-helpers'
 
 export type FeatureCollection = GeoJSON.FeatureCollection
 
@@ -115,7 +116,7 @@ export const MapView: React.FC = () => {
       id: POINT_LAYER_ID,
       type: 'circle',
       source: SOURCE_ID,
-      filter: ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'drawMode'], 'point']],
+      filter: ['all', ['==', ['geometry-type'], 'Point'], ['!', ['==', ['get', 'drawMode'], 'symbol']]],
       paint: {
         'circle-radius': 5,
         'circle-color': '#1a73e8',
@@ -309,6 +310,16 @@ export const MapView: React.FC = () => {
     setSelectedFeatureId(null)
   }, [selectedFeatureId])
 
+  const updateFeatureProperties = useCallback((featureId: string, userProperties: Record<string, string>) => {
+    setFeatures((prev) => ({
+      ...prev,
+      features: prev.features.map((f) => {
+        if (f.properties?._id !== featureId) return f
+        return { ...f, properties: mergeUserProperties(f.properties, userProperties) }
+      }),
+    }))
+  }, [])
+
   const resetGeoJSON = useCallback(() => {
     if (highlightTimerRef.current) {
       clearTimeout(highlightTimerRef.current)
@@ -378,6 +389,7 @@ export const MapView: React.FC = () => {
         highlightedFeatureId={highlightedPanelFeatureId}
         onFeatureClick={handlePanelFeatureClick}
         onImportCSV={handleImportCSV}
+        onUpdateFeatureProperties={updateFeatureProperties}
       />
     </div>
   )

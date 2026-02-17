@@ -105,6 +105,14 @@ Before({ timeout: 60000 }, async function (this: CustomWorld) {
     route.fulfill({ contentType: 'application/json', body: BLANK_STYLE }),
   )
 
+  // Geolonia CDN・API へのリクエストをスタブ化（E2E 環境では maplibre-gl にフォールバック）
+  await this.page.route(/cdn\.geolonia\.com/, (route) =>
+    route.fulfill({ contentType: 'application/javascript', body: '/* noop */' }),
+  )
+  await this.page.route(/api\.geolonia\.com/, (route) =>
+    route.fulfill({ contentType: 'application/json', body: '{}' }),
+  )
+
   await this.page.goto(APP_URL)
   await this.page.waitForSelector(DRAW_CONTROL_PANEL, { state: 'visible', timeout: 30000 })
   await waitForMapReady(this.page)

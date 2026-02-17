@@ -14,7 +14,7 @@
     "test:e2e:headed": "HEADLESS=false NODE_OPTIONS='--import tsx' cucumber-js"
   },
   "dependencies": {
-    "maplibre-gl": "^5.16.0",
+    "maplibre-gl": "^5.18.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
