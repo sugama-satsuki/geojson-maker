@@ -44,7 +44,7 @@ export const MapView: React.FC = () => {
     style: MAP_STYLE as unknown as StyleSpecification
   })
 
-  const [drawMode, setDrawMode] = useState<DrawMode>('point')
+  const [drawMode, setDrawMode] = useState<DrawMode | null>('point')
   const [features, setFeatures] = useState<FeatureCollection>({ type: 'FeatureCollection', features: [] })
   const [draftCoords, setDraftCoords] = useState<[number, number][]>([])
   const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null)
@@ -241,8 +241,12 @@ export const MapView: React.FC = () => {
         }
       }
 
-      // 地物未クリック → 選択解除して通常の描画処理
+      // 地物未クリック → 選択解除
       setSelectedFeatureId(null)
+
+      // 描画モード未選択時は何もしない
+      if (!drawMode) return
+
       const coordinate: [number, number] = [event.lngLat.lng, event.lngLat.lat]
 
       if (drawMode === 'point' || drawMode === 'symbol') {

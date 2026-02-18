@@ -20,8 +20,8 @@ export const DRAW_MODE_TOOLTIPS: Record<DrawMode, string> = {
 const DRAW_MODES: DrawMode[] = ['point', 'line', 'polygon', 'symbol']
 
 type DrawModeSelectorProps = {
-  selectedMode: DrawMode
-  onChange: (mode: DrawMode) => void
+  selectedMode: DrawMode | null
+  onChange: (mode: DrawMode | null) => void
 }
 
 export function DrawModeSelector({ selectedMode, onChange }: DrawModeSelectorProps) {
@@ -38,7 +38,7 @@ export function DrawModeSelector({ selectedMode, onChange }: DrawModeSelectorPro
             data-mode={mode}
             aria-label={label}
             title={DRAW_MODE_TOOLTIPS[mode]}
-            onClick={() => onChange(mode)}
+            onClick={() => onChange(isSelected ? null : mode)}
             className={`draw-mode-selector__button${isSelected ? ' draw-mode-selector__button--selected' : ''}`}
           >
             <Icon />
