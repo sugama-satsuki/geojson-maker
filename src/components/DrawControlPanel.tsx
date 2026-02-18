@@ -154,6 +154,7 @@ export function DrawControlPanel({
           </svg>
         </button>
       )}
+      <div className='draw-control-panel__separator' />
       <button
         type='button'
         onClick={onDeleteFeature}

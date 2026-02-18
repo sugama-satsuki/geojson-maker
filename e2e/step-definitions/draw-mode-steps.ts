@@ -42,9 +42,26 @@ When('{string} モードを選択する', async function (this: CustomWorld, mod
   await expect(button).toHaveClass(/draw-mode-selector__button--selected/)
 })
 
+When('{string} モードを選択解除する', async function (this: CustomWorld, modeName: string) {
+  const dataMode = toDataMode(modeName)
+  const button = this.page.locator(modeButtonSelector(dataMode))
+  // 選択中でなければ先にクリックして選択
+  if (!(await button.getAttribute('class'))?.includes('--selected')) {
+    await button.click()
+  }
+  // もう一度クリックして解除
+  await button.click()
+  await expect(button).not.toHaveClass(/draw-mode-selector__button--selected/)
+})
+
 Then('選択中のモードが {string} である', async function (this: CustomWorld, modeName: string) {
   const dataMode = toDataMode(modeName)
   const selected = this.page.locator(MODE_BUTTON_SELECTED)
   await expect(selected).toHaveAttribute('data-mode', dataMode)
+})
+
+Then('モードが選択されていない', async function (this: CustomWorld) {
+  const selected = this.page.locator(MODE_BUTTON_SELECTED)
+  await expect(selected).toHaveCount(0)
 })
 
