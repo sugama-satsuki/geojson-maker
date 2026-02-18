@@ -5,11 +5,11 @@ import { parseGeoJSONImport } from '../lib/geojson-helpers'
 import './DrawControlPanel.css'
 
 type DrawControlPanelProps = {
-  drawMode: DrawMode
+  drawMode: DrawMode | null
   isDrawingPath: boolean
   canFinalizeDraft: boolean
   hasSelectedFeature: boolean
-  onChangeMode: (mode: DrawMode) => void
+  onChangeMode: (mode: DrawMode | null) => void
   onFinalize: () => void
   onDeleteFeature: () => void
   onResetGeoJSON: () => void
@@ -141,6 +141,19 @@ export function DrawControlPanel({
         </svg>
       </div>
       <DrawModeSelector selectedMode={drawMode} onChange={onChangeMode} />
+      {isDrawingPath && (
+        <button
+          type='button'
+          onClick={onFinalize}
+          disabled={!canFinalizeDraft}
+          title='ドラフトを確定'
+          className={`draw-control-panel__action-button draw-control-panel__action-button--confirm${canFinalizeDraft ? '' : ' draw-control-panel__action-button--disabled'}`}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </button>
+      )}
       <button
         type='button'
         onClick={onDeleteFeature}
@@ -203,19 +216,6 @@ export function DrawControlPanel({
       </div>
       <input ref={csvFileInputRef} type='file' accept='.csv' onChange={handleCSVFileChange} style={{ display: 'none' }} />
       <input ref={geojsonFileInputRef} type='file' accept='.geojson,.json' onChange={handleGeoJSONFileChange} style={{ display: 'none' }} />
-      {isDrawingPath && (
-        <button
-          type='button'
-          onClick={onFinalize}
-          disabled={!canFinalizeDraft}
-          title='ドラフトを確定'
-          className={`draw-control-panel__action-button draw-control-panel__action-button--confirm${canFinalizeDraft ? '' : ' draw-control-panel__action-button--disabled'}`}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </button>
-      )}
     </div>
   )
 }
