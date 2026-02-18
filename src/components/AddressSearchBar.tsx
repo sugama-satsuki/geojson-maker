@@ -1,16 +1,13 @@
 import { useCallback, useState } from 'react'
 import './AddressSearchBar.css'
 
-declare global {
-  function getLatLng(
-    address: string,
-    callback: (latlng: { lat: number; lng: number }) => void,
-    errorCallback: (error: string) => void,
-  ): void
-}
-
 type AddressSearchBarProps = {
   onSearch: (lat: number, lng: number) => void
+}
+
+type NominatimResult = {
+  lat: string
+  lon: string
 }
 
 export function AddressSearchBar({ onSearch }: AddressSearchBarProps) {
@@ -18,29 +15,32 @@ export function AddressSearchBar({ onSearch }: AddressSearchBarProps) {
   const [error, setError] = useState<string | null>(null)
   const [isSearching, setIsSearching] = useState(false)
 
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     const trimmed = query.trim()
     if (!trimmed) return
-
-    if (typeof getLatLng !== 'function') {
-      setError('住所検索が利用できません')
-      return
-    }
 
     setIsSearching(true)
     setError(null)
 
-    getLatLng(
-      trimmed,
-      (latlng) => {
-        setIsSearching(false)
-        onSearch(latlng.lat, latlng.lng)
-      },
-      () => {
-        setIsSearching(false)
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(trimmed)}&format=json&limit=1`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error('検索に失敗しました')
+
+      const data: NominatimResult[] = await res.json()
+      if (data.length === 0) {
         setError('住所が見つかりませんでした')
-      },
-    )
+        return
+      }
+
+      const lat = parseFloat(data[0].lat)
+      const lng = parseFloat(data[0].lon)
+      onSearch(lat, lng)
+    } catch {
+      setError('住所が見つかりませんでした')
+    } finally {
+      setIsSearching(false)
+    }
   }, [query, onSearch])
 
   const handleKeyDown = useCallback(

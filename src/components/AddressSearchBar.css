@@ -1,8 +1,7 @@
 .address-search-bar {
   position: absolute;
   top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: calc(360px + 16px);
   z-index: 2;
 
   display: flex;

@@ -113,18 +113,20 @@ Before({ timeout: 60000 }, async function (this: CustomWorld) {
     route.fulfill({ contentType: 'application/json', body: '{}' }),
   )
 
-  // Community Geocoder のスタブ（getLatLng 関数をモック）
-  await this.page.addInitScript(() => {
-    (window as unknown as Record<string, unknown>).getLatLng = (
-      address: string,
-      callback: (latlng: { lat: number; lng: number }) => void,
-      errorCallback: (error: string) => void,
-    ) => {
-      if (address === '東京都千代田区丸の内1丁目') {
-        callback({ lat: 35.6812, lng: 139.7671 })
-      } else {
-        errorCallback('見つかりませんでした')
-      }
+  // Nominatim API のスタブ（住所検索テスト用）
+  await this.page.route(/nominatim\.openstreetmap\.org\/search/, (route) => {
+    const url = new URL(route.request().url())
+    const q = url.searchParams.get('q') ?? ''
+    if (q.includes('東京都千代田区丸の内1丁目')) {
+      route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify([{ lat: '35.6812', lon: '139.7671' }]),
+      })
+    } else {
+      route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      })
     }
   })
 
