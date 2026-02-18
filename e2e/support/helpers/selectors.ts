@@ -35,7 +35,8 @@ export const IMPORT_POPUP_BTN = '.draw-control-panel__import-popup-btn'
 export const ADDRESS_SEARCH_BAR = '.address-search-bar'
 export const ADDRESS_SEARCH_INPUT = '.address-search-bar__input'
 export const ADDRESS_SEARCH_BUTTON = '.address-search-bar__button'
-export const ADDRESS_SEARCH_ERROR = '.address-search-bar__error'
+export const ADDRESS_SEARCH_ERROR = '.address-search-bar__message--error'
+export const ADDRESS_SEARCH_WARNING = '.address-search-bar__message--warning'
 
 /** プロパティエディタ */
 export const FEATURE_PROPS_EDITOR = '[data-testid="feature-props-editor"]'

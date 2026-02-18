@@ -1,18 +1,22 @@
 import { useCallback, useState } from 'react'
+import { normalize } from '@geolonia/normalize-japanese-addresses'
 import './AddressSearchBar.css'
 
 type AddressSearchBarProps = {
   onSearch: (lat: number, lng: number) => void
 }
 
-type NominatimResult = {
-  lat: string
-  lon: string
+const LEVEL_LABELS: Record<number, string> = {
+  0: '都道府県を判別できませんでした',
+  1: '都道府県レベルの精度です',
+  2: '市区町村レベルの精度です',
+  3: '丁目・町字レベルの精度です',
 }
 
 export function AddressSearchBar({ onSearch }: AddressSearchBarProps) {
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
   const [isSearching, setIsSearching] = useState(false)
 
   const handleSearch = useCallback(async () => {
@@ -21,23 +25,23 @@ export function AddressSearchBar({ onSearch }: AddressSearchBarProps) {
 
     setIsSearching(true)
     setError(null)
+    setWarning(null)
 
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(trimmed)}&format=json&limit=1`
-      const res = await fetch(url)
-      if (!res.ok) throw new Error('検索に失敗しました')
+      const result = await normalize(trimmed)
 
-      const data: NominatimResult[] = await res.json()
-      if (data.length === 0) {
+      if (!result.point || result.level === 0) {
         setError('住所が見つかりませんでした')
         return
       }
 
-      const lat = parseFloat(data[0].lat)
-      const lng = parseFloat(data[0].lon)
-      onSearch(lat, lng)
+      if (result.level !== 8) {
+        setWarning(LEVEL_LABELS[result.level] ?? `正規化レベル: ${result.level}`)
+      }
+
+      onSearch(result.point.lat, result.point.lng)
     } catch {
-      setError('住所が見つかりませんでした')
+      setError('住所の検索に失敗しました')
     } finally {
       setIsSearching(false)
     }
@@ -62,6 +66,7 @@ export function AddressSearchBar({ onSearch }: AddressSearchBarProps) {
         onChange={(e) => {
           setQuery(e.target.value)
           setError(null)
+          setWarning(null)
         }}
         onKeyDown={handleKeyDown}
         disabled={isSearching}
@@ -79,7 +84,8 @@ export function AddressSearchBar({ onSearch }: AddressSearchBarProps) {
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
       </button>
-      {error && <div className="address-search-bar__error">{error}</div>}
+      {error && <div className="address-search-bar__message address-search-bar__message--error">{error}</div>}
+      {warning && <div className="address-search-bar__message address-search-bar__message--warning">{warning}</div>}
     </div>
   )
 }

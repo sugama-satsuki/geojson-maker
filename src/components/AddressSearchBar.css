@@ -79,23 +79,35 @@
   cursor: not-allowed;
 }
 
-.address-search-bar__error {
+.address-search-bar__message {
   position: absolute;
   top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
   padding: 6px 12px;
   border-radius: 8px;
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.address-search-bar__message--error {
   background:
     linear-gradient(160deg,
       rgba(255, 255, 255, 0.92) 0%,
       rgba(254, 226, 226, 0.85) 100%);
-  backdrop-filter: blur(var(--glass-blur-strong));
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
   border: 1px solid rgba(239, 68, 68, 0.3);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
-  font-size: 12px;
-  font-weight: 500;
   color: var(--color-danger);
-  white-space: nowrap;
+}
+
+.address-search-bar__message--warning {
+  background:
+    linear-gradient(160deg,
+      rgba(255, 255, 255, 0.92) 0%,
+      rgba(255, 251, 235, 0.85) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+  color: #b45309;
 }

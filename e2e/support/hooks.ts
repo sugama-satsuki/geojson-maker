@@ -113,23 +113,6 @@ Before({ timeout: 60000 }, async function (this: CustomWorld) {
     route.fulfill({ contentType: 'application/json', body: '{}' }),
   )
 
-  // Nominatim API のスタブ（住所検索テスト用）
-  await this.page.route(/nominatim\.openstreetmap\.org\/search/, (route) => {
-    const url = new URL(route.request().url())
-    const q = url.searchParams.get('q') ?? ''
-    if (q.includes('東京都千代田区丸の内1丁目')) {
-      route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify([{ lat: '35.6812', lon: '139.7671' }]),
-      })
-    } else {
-      route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify([]),
-      })
-    }
-  })
-
   await this.page.goto(APP_URL)
   await this.page.waitForSelector(DRAW_CONTROL_PANEL, { state: 'visible', timeout: 30000 })
   await waitForMapReady(this.page)
