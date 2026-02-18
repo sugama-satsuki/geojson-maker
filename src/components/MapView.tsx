@@ -7,6 +7,7 @@ import { DrawControlPanel } from './DrawControlPanel'
 import { GeoJSONPanel } from './GeoJSONPanel'
 import { FeatureContextMenu } from './FeatureContextMenu'
 import { AddressSearchBar } from './AddressSearchBar'
+import { AppLogo } from './AppLogo'
 import { createPointFeature, createPathFeature, createDraftFeatureCollection, nextFeatureId } from '../lib/geojson-helpers'
 import { getFeatureCenter } from '../lib/feature-center'
 import { parseCSV } from '../lib/csv-helpers'
@@ -428,6 +429,8 @@ export const MapView: React.FC = () => {
         data-scale-control='on'
         style={{ width: '100%', height: '100%' }}
       />
+
+      <AppLogo />
 
       <AddressSearchBar onSearch={handleAddressSearch} />
 

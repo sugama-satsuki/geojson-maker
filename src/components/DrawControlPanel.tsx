@@ -17,7 +17,7 @@ type DrawControlPanelProps = {
   onImportGeoJSON: (features: GeoJSON.Feature[], mode: 'replace' | 'merge') => void
 }
 
-const INITIAL_POSITION = { x: 10, y: 10 }
+const INITIAL_POSITION = { x: 10, y: 54 }
 
 export function DrawControlPanel({
   drawMode,
