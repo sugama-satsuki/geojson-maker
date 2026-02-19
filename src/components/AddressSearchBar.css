@@ -64,9 +64,35 @@
   border-radius: 0 11px 11px 0;
 }
 
+.address-search-bar__clear-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.address-search-bar__clear-button span {
+  line-height: 1;
+}
+
 .address-search-bar__button svg {
   width: 18px;
   height: 18px;
+}
+
+.address-search-bar__clear-button:hover:not(:disabled) {
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.08);
 }
 
 .address-search-bar__button:hover:not(:disabled) {
@@ -75,6 +101,11 @@
 }
 
 .address-search-bar__button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.address-search-bar__clear-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }

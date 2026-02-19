@@ -56,6 +56,14 @@ export function AddressSearchBar({ onSearch }: AddressSearchBarProps) {
     [handleSearch],
   )
 
+  const handleClear = useCallback(() => {
+    setQuery('')
+    setError(null)
+    setWarning(null)
+  }, [])
+
+  const hasQuery = Boolean(query.trim())
+
   return (
     <div className="address-search-bar">
       <input
@@ -73,9 +81,19 @@ export function AddressSearchBar({ onSearch }: AddressSearchBarProps) {
       />
       <button
         type="button"
+        className="address-search-bar__clear-button"
+        onClick={handleClear}
+        disabled={isSearching || !hasQuery}
+        title="入力をクリア"
+        aria-label="検索キーワードをクリア"
+      >
+        <span aria-hidden="true">×</span>
+      </button>
+      <button
+        type="button"
         className="address-search-bar__button"
         onClick={handleSearch}
-        disabled={isSearching || !query.trim()}
+        disabled={isSearching || !hasQuery}
         title="検索"
         aria-label="住所を検索"
       >
