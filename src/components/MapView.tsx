@@ -12,6 +12,7 @@ import { createPointFeature, createPathFeature, createDraftFeatureCollection, ne
 import { getFeatureCenter } from '../lib/feature-center'
 import { parseCSV } from '../lib/csv-helpers'
 import { mergeUserProperties } from '../lib/property-helpers'
+import { encodeFeaturesToURL, decodeURLToFeatures, URL_SIZE_WARNING_CHARS } from '../lib/url-helpers'
 import './MapView.css'
 
 export type FeatureCollection = GeoJSON.FeatureCollection
@@ -412,6 +413,29 @@ export const MapView: React.FC = () => {
     }, 1500)
   }, [])
 
+  // URL パラメータからフィーチャを初期ロード（マウント時のみ）
+  useEffect(() => {
+    const imported = decodeURLToFeatures()
+    if (imported && imported.features.length > 0) {
+      setFeatures(imported)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const copyShareURL = useCallback(() => {
+    if (featuresRef.current.features.length === 0) {
+      handleCopy({ message: 'フィーチャがありません', type: 'error' })
+      return
+    }
+    const url = encodeFeaturesToURL(featuresRef.current)
+    if (url.length > URL_SIZE_WARNING_CHARS) {
+      handleCopy({ message: 'URLが長くなりすぎる可能性があります', type: 'error' })
+      return
+    }
+    navigator.clipboard.writeText(url)
+      .then(() => handleCopy({ message: 'URLをコピーしました', type: 'success' }))
+      .catch(() => handleCopy({ message: 'コピーに失敗しました', type: 'error' }))
+  }, [handleCopy])
+
   const handleImportGeoJSON = useCallback((importedFeatures: GeoJSON.Feature[], mode: 'replace' | 'merge') => {
     if (mode === 'replace') {
       if (highlightTimerRef.current) {
@@ -455,6 +479,7 @@ export const MapView: React.FC = () => {
         onFinalize={finalizeDraft}
         onDeleteFeature={deleteSelectedFeature}
         onResetGeoJSON={resetGeoJSON}
+        onShareURL={copyShareURL}
         onImportCSV={handleImportCSV}
         onImportGeoJSON={handleImportGeoJSON}
       />
