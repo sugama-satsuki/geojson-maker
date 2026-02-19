@@ -1,27 +1,5 @@
 # CLAUDE.md
 
-## プロジェクト概要
-
-GeoJSON Maker — [Geolonia Map](https://maps.geolonia.com/) を使った GeoJSON 作図 Web アプリ。
-React + TypeScript + Vite。
-
-### 地図の実装
-
-- 地図は **Geolonia Map** (https://maps.geolonia.com/) を使用
-- Geolonia Map は MapLibre GL JS ベースの地図サービス
-- スタイル: `geolonia/basic` (`https://smartmap.styles.geoloniamaps.com/style.json`)
-- 地図コンポーネントの初期化は `src/hooks/useGeoloniaMap.ts` で行う
-
-## コマンド
-
-- `npm run dev` — 開発サーバ起動
-- `npm run build` — プロダクションビルド
-- `npm test` — ユニットテスト (Vitest)
-- `npm run test:coverage` — カバレッジ付きユニットテスト
-- `npm run test:e2e` — E2E テスト (Cucumber + Playwright, headless)
-- `npm run test:e2e:headed` — E2E テスト (ブラウザ表示あり)
-- `npm run lint` — ESLint
-
 ## ブランチ運用
 
 - 機能追加・バグ修正は必ず **main から新しいブランチ** を切って作業する
@@ -58,7 +36,6 @@ React + TypeScript + Vite。
 
 - 日本語で記述
 - 1行目に変更の要約、必要に応じて空行の後に詳細
-- 末尾に `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>` を付与
 
 ## PR 作成
 
@@ -72,22 +49,6 @@ React + TypeScript + Vite。
 - テストが落ちたら原因を調査し、修正してから再コミット
 - CI で問題が起きたらブランチを切って修正し、PR → CI パス → マージ の流れで対応
 - コンフリクトが発生したブランチは `git merge origin/main` で解消し、テスト全パスを確認してからプッシュ
-
-## アーキテクチャ
-
-- `src/components/` — React コンポーネント (`.tsx` + `.css`)
-- `src/hooks/` — カスタムフック (`useGeoloniaMap`)
-- `src/lib/` — 純粋関数ユーティリティ
-- `e2e/` — E2E テスト一式
-- `.github/workflows/` — CI 設定
-
-### MapLibre ソース構成
-
-| ソース ID | 用途 |
-|-----------|------|
-| `geojson-maker-generated-features` | 確定済みフィーチャ |
-| `geojson-maker-draft` | ドラフトプレビュー |
-| `geojson-maker-highlight` | 選択ハイライト |
 
 # Global Rules
 
