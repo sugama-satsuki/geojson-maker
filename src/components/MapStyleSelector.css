@@ -1,0 +1,114 @@
+.map-style-selector {
+  position: absolute;
+  bottom: 24px;
+  right: 366px;
+  z-index: 3;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.map-style-selector__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background:
+    linear-gradient(165deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(241, 245, 249, 0.8) 48%,
+      rgba(226, 232, 240, 0.8) 100%);
+  box-shadow:
+    0 15px 30px rgba(15, 23, 42, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  cursor: pointer;
+  color: #0f172a;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.map-style-selector__toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.map-style-selector__toggle:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+.map-style-selector__panel {
+  margin-top: 10px;
+  width: 240px;
+  padding: 10px 0;
+  border-radius: 18px;
+  border: 1px solid var(--glass-border);
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(243, 244, 246, 0.9) 100%);
+  box-shadow:
+    0 25px 45px rgba(15, 23, 42, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-style-selector__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  text-align: left;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.map-style-selector__item:hover {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.map-style-selector__item:focus-visible {
+  outline: 2px solid rgba(26, 115, 232, 0.45);
+  outline-offset: 2px;
+}
+
+.map-style-selector__item--selected {
+  background: rgba(26, 115, 232, 0.14);
+  border-left: 3px solid var(--color-blue);
+  font-weight: 600;
+}
+
+.map-style-selector__thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 12px 20px rgba(15, 23, 42, 0.25);
+}
+
+.map-style-selector__thumb-icon {
+  width: 18px;
+  height: 18px;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.map-style-selector__thumb-icon--light {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.map-style-selector__item-label {
+  flex: 1;
+}

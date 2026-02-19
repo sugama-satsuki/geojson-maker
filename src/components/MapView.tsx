@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import type maplibregl from 'maplibre-gl'
-import type { StyleSpecification } from 'maplibre-gl'
 import { useGeoloniaMap } from '../hooks/useGeoloniaMap'
 import { DrawMode } from './DrawModeSelector'
 import { DrawControlPanel } from './DrawControlPanel'
@@ -8,6 +7,7 @@ import { GeoJSONPanel } from './GeoJSONPanel'
 import { FeatureContextMenu } from './FeatureContextMenu'
 import { AddressSearchBar } from './AddressSearchBar'
 import { AppLogo } from './AppLogo'
+import { MapStyleSelector } from './MapStyleSelector'
 import { createPointFeature, createPathFeature, createDraftFeatureCollection, nextFeatureId } from '../lib/geojson-helpers'
 import { getFeatureCenter } from '../lib/feature-center'
 import { parseCSV } from '../lib/csv-helpers'
@@ -16,7 +16,7 @@ import './MapView.css'
 
 export type FeatureCollection = GeoJSON.FeatureCollection
 
-const MAP_STYLE = 'geolonia/basic'
+const DEFAULT_MAP_STYLE_ID = 'geolonia/basic'
 const SOURCE_ID = 'geojson-maker-generated-features'
 const POINT_LAYER_ID = 'geojson-maker-point-layer'
 const SYMBOL_LAYER_ID = 'geojson-maker-symbol-layer'
@@ -38,12 +38,13 @@ type PathMode = Extract<DrawMode, 'line' | 'polygon'>
 
 export const MapView: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null)
+  const [mapStyleId, setMapStyleId] = useState<string>(DEFAULT_MAP_STYLE_ID)
   const map = useGeoloniaMap(containerRef, {
     center: [139.7670, 35.6814],
     zoom: 14,
     minZoom: 2,
     maxZoom: 19,
-    style: MAP_STYLE as unknown as StyleSpecification
+    style: mapStyleId
   })
 
   const [drawMode, setDrawMode] = useState<DrawMode | null>('point')
@@ -439,10 +440,12 @@ export const MapView: React.FC = () => {
         data-gesture-handling='off'
         data-navigation-control='off'
         data-scale-control='on'
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: 'calc(100% - 360px)', height: '100%' }}
       />
 
       <AppLogo />
+
+      <MapStyleSelector currentStyle={mapStyleId} onStyleChange={setMapStyleId} />
 
       <AddressSearchBar onSearch={handleAddressSearch} />
 
