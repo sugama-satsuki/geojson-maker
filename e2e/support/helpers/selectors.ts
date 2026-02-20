@@ -41,6 +41,12 @@ export const ADDRESS_SEARCH_BUTTON = '.address-search-bar__button'
 export const ADDRESS_SEARCH_ERROR = '.address-search-bar__message--error'
 export const ADDRESS_SEARCH_WARNING = '.address-search-bar__message--warning'
 
+/** ヘルプモーダル */
+export const HELP_BUTTON = '[aria-label="使い方を見る"]'
+export const HELP_MODAL = '.help-modal'
+export const HELP_MODAL_OVERLAY = '.help-modal-overlay'
+export const HELP_MODAL_CLOSE = '.help-modal__close'
+
 /** プロパティエディタ */
 export const FEATURE_PROPS_EDITOR = '[data-testid="feature-props-editor"]'
 export const PROP_KEY_INPUT = '[data-testid="prop-key-input"]'

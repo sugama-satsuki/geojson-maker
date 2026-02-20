@@ -9,6 +9,7 @@ import { GeoJSONPanel } from './GeoJSONPanel'
 import { FeatureContextMenu } from './FeatureContextMenu'
 import { AddressSearchBar } from './AddressSearchBar'
 import { AppLogo } from './AppLogo'
+import { HelpModal } from './HelpModal'
 import { createPointFeature, createPathFeature, createDraftFeatureCollection, nextFeatureId } from '../lib/geojson-helpers'
 import { getFeatureCenter } from '../lib/feature-center'
 import { parseCSV } from '../lib/csv-helpers'
@@ -66,6 +67,7 @@ export const MapView: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   /** ラバーバンド選択の視覚表示用 */
   const [rubberBand, setRubberBand] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
 
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const featuresRef = useRef(features)
@@ -522,7 +524,7 @@ export const MapView: React.FC = () => {
         data-gesture-handling='off'
         data-navigation-control='off'
         data-scale-control='on'
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: 'calc(100% - 360px)', height: '100%' }}
       />
 
       {/* ラバーバンド選択の視覚表示 */}
@@ -562,6 +564,7 @@ export const MapView: React.FC = () => {
         onRedo={redoFeatures}
         onImportCSV={handleImportCSV}
         onImportGeoJSON={handleImportGeoJSON}
+        onOpenHelp={() => setIsHelpOpen(true)}
       />
 
       <GeoJSONPanel
@@ -585,6 +588,8 @@ export const MapView: React.FC = () => {
           {toast.message}
         </div>
       )}
+
+      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </div>
   )
 }

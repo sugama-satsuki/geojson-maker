@@ -21,6 +21,7 @@ type DrawControlPanelProps = {
   onRedo: () => void
   onImportCSV: (text: string) => void
   onImportGeoJSON: (features: GeoJSON.Feature[], mode: 'replace' | 'merge') => void
+  onOpenHelp: () => void
 }
 
 const INITIAL_POSITION = { x: 10, y: 54 }
@@ -42,6 +43,7 @@ export function DrawControlPanel({
   onRedo,
   onImportCSV,
   onImportGeoJSON,
+  onOpenHelp,
 }: DrawControlPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState(INITIAL_POSITION)
@@ -229,6 +231,19 @@ export function DrawControlPanel({
           <circle cx="18" cy="19" r="3" />
           <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
           <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+        </svg>
+      </button>
+      <button
+        type='button'
+        onClick={onOpenHelp}
+        title='使い方'
+        aria-label='使い方を見る'
+        className='draw-control-panel__action-button draw-control-panel__action-button--help'
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
       </button>
       <div className='draw-control-panel__separator' />
