@@ -9,6 +9,7 @@ type DrawControlPanelProps = {
   isDrawingPath: boolean
   canFinalizeDraft: boolean
   hasSelectedFeature: boolean
+  selectedCount: number
   canUndo: boolean
   canRedo: boolean
   onChangeMode: (mode: DrawMode | null) => void
@@ -29,6 +30,7 @@ export function DrawControlPanel({
   isDrawingPath,
   canFinalizeDraft,
   hasSelectedFeature,
+  selectedCount,
   canUndo,
   canRedo,
   onChangeMode,
@@ -194,7 +196,7 @@ export function DrawControlPanel({
         type='button'
         onClick={onDeleteFeature}
         disabled={!hasSelectedFeature}
-        title='追加した地物をクリックして削除'
+        title={selectedCount > 1 ? `選択中の ${selectedCount} 件を削除` : '選択した地物を削除'}
         className={`draw-control-panel__action-button draw-control-panel__action-button--delete${hasSelectedFeature ? '' : ' draw-control-panel__action-button--disabled'}`}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

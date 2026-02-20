@@ -59,14 +59,24 @@ export const MapView: React.FC = () => {
     canRedo,
   } = useUndoable<FeatureCollection>({ type: 'FeatureCollection', features: [] })
   const [draftCoords, setDraftCoords] = useState<[number, number][]>([])
-  const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null)
+  /** 選択中のフィーチャ ID セット（マルチ選択対応） */
+  const [selectedFeatureIds, setSelectedFeatureIds] = useState<Set<string>>(new Set())
   const [highlightedPanelFeatureId, setHighlightedPanelFeatureId] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{ feature: GeoJSON.Feature; x: number; y: number } | null>(null)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  /** ラバーバンド選択の視覚表示用 */
+  const [rubberBand, setRubberBand] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
+
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const featuresRef = useRef(features)
   featuresRef.current = features
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** ラバーバンド中フラグ（click イベントで選択解除されるのを防ぐ） */
+  const wasRubberBandingRef = useRef(false)
+  /** ラバーバンドドラッグ状態（maplibre イベントハンドラ内で参照） */
+  const rbDragRef = useRef<{ startPoint: { x: number; y: number }; isActive: boolean } | null>(null)
+  const drawModeRef = useRef(drawMode)
+  drawModeRef.current = drawMode
 
   const isDrawingPath = drawMode === 'line' || drawMode === 'polygon'
   const requiredVertices = drawMode === 'polygon' ? 3 : 2
@@ -92,6 +102,9 @@ export const MapView: React.FC = () => {
     }))
   }, [])
 
+  // 単一選択時のみ頂点編集を有効にする（マルチ選択時は無効）
+  const selectedFeatureId = selectedFeatureIds.size === 1 ? [...selectedFeatureIds][0] : null
+
   const { justDraggedRef } = useVertexEditing({
     map,
     features,
@@ -102,7 +115,7 @@ export const MapView: React.FC = () => {
 
   useEffect(() => {
     setDraftCoords([])
-    setSelectedFeatureId(null)
+    setSelectedFeatureIds(new Set())
     setContextMenu(null)
   }, [drawMode])
 
@@ -110,145 +123,89 @@ export const MapView: React.FC = () => {
     if (!map) return
     if (map.getSource(SOURCE_ID)) return
 
-    map.addSource(SOURCE_ID, {
-      type: 'geojson',
-      data: features
-    })
+    map.addSource(SOURCE_ID, { type: 'geojson', data: features })
 
     map.addLayer({
       id: POLYGON_LAYER_ID,
       type: 'fill',
       source: SOURCE_ID,
       filter: ['all', ['==', ['geometry-type'], 'Polygon']],
-      paint: {
-        'fill-color': '#e86a4a',
-        'fill-opacity': 0.2
-      }
+      paint: { 'fill-color': '#e86a4a', 'fill-opacity': 0.2 }
     })
-
     map.addLayer({
       id: LINE_LAYER_ID,
       type: 'line',
       source: SOURCE_ID,
       filter: ['all', ['==', ['geometry-type'], 'LineString']],
-      paint: {
-        'line-color': '#e86a4a',
-        'line-width': 3
-      }
+      paint: { 'line-color': '#e86a4a', 'line-width': 3 }
     })
-
     map.addLayer({
       id: SYMBOL_LAYER_ID,
       type: 'circle',
       source: SOURCE_ID,
       filter: ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', 'drawMode'], 'symbol']],
-      paint: {
-        'circle-radius': 7,
-        'circle-color': '#ffb400',
-        'circle-stroke-color': '#fff',
-        'circle-stroke-width': 2
-      }
+      paint: { 'circle-radius': 7, 'circle-color': '#ffb400', 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 }
     })
-
     map.addLayer({
       id: POINT_LAYER_ID,
       type: 'circle',
       source: SOURCE_ID,
       filter: ['all', ['==', ['geometry-type'], 'Point'], ['!', ['==', ['get', 'drawMode'], 'symbol']]],
-      paint: {
-        'circle-radius': 5,
-        'circle-color': '#1a73e8',
-        'circle-stroke-color': '#fff',
-        'circle-stroke-width': 2
-      }
+      paint: { 'circle-radius': 5, 'circle-color': '#1a73e8', 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 }
     })
 
-    // ドラフトプレビュー用ソース＆レイヤー
     const emptyFC: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
     map.addSource(DRAFT_SOURCE_ID, { type: 'geojson', data: emptyFC })
-
     map.addLayer({
       id: DRAFT_POLYGON_LAYER_ID,
       type: 'fill',
       source: DRAFT_SOURCE_ID,
       filter: ['==', ['geometry-type'], 'Polygon'],
-      paint: {
-        'fill-color': '#e86a4a',
-        'fill-opacity': 0.1
-      }
+      paint: { 'fill-color': '#e86a4a', 'fill-opacity': 0.1 }
     })
-
     map.addLayer({
       id: DRAFT_LINE_LAYER_ID,
       type: 'line',
       source: DRAFT_SOURCE_ID,
       filter: ['==', ['geometry-type'], 'LineString'],
-      paint: {
-        'line-color': '#e86a4a',
-        'line-width': 2,
-        'line-dasharray': [4, 4]
-      }
+      paint: { 'line-color': '#e86a4a', 'line-width': 2, 'line-dasharray': [4, 4] }
     })
-
     map.addLayer({
       id: DRAFT_POINT_LAYER_ID,
       type: 'circle',
       source: DRAFT_SOURCE_ID,
       filter: ['==', ['geometry-type'], 'Point'],
-      paint: {
-        'circle-radius': 4,
-        'circle-color': '#e86a4a',
-        'circle-stroke-color': '#fff',
-        'circle-stroke-width': 1.5
-      }
+      paint: { 'circle-radius': 4, 'circle-color': '#e86a4a', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 }
     })
 
-    // ハイライト用ソース＆レイヤー
     map.addSource(HIGHLIGHT_SOURCE_ID, { type: 'geojson', data: emptyFC })
-
     map.addLayer({
       id: HIGHLIGHT_POLYGON_LAYER_ID,
       type: 'line',
       source: HIGHLIGHT_SOURCE_ID,
       filter: ['==', ['geometry-type'], 'Polygon'],
-      paint: {
-        'line-color': '#ff0000',
-        'line-width': 3,
-        'line-dasharray': [3, 2]
-      }
+      paint: { 'line-color': '#ff0000', 'line-width': 3, 'line-dasharray': [3, 2] }
     })
-
     map.addLayer({
       id: HIGHLIGHT_LINE_LAYER_ID,
       type: 'line',
       source: HIGHLIGHT_SOURCE_ID,
       filter: ['==', ['geometry-type'], 'LineString'],
-      paint: {
-        'line-color': '#ff0000',
-        'line-width': 5
-      }
+      paint: { 'line-color': '#ff0000', 'line-width': 5 }
     })
-
     map.addLayer({
       id: HIGHLIGHT_POINT_LAYER_ID,
       type: 'circle',
       source: HIGHLIGHT_SOURCE_ID,
       filter: ['==', ['geometry-type'], 'Point'],
-      paint: {
-        'circle-radius': 10,
-        'circle-color': 'rgba(255, 0, 0, 0.3)',
-        'circle-stroke-color': '#ff0000',
-        'circle-stroke-width': 2
-      }
+      paint: { 'circle-radius': 10, 'circle-color': 'rgba(255, 0, 0, 0.3)', 'circle-stroke-color': '#ff0000', 'circle-stroke-width': 2 }
     })
 
     return () => {
       ;[HIGHLIGHT_POINT_LAYER_ID, HIGHLIGHT_LINE_LAYER_ID, HIGHLIGHT_POLYGON_LAYER_ID,
         DRAFT_POINT_LAYER_ID, DRAFT_LINE_LAYER_ID, DRAFT_POLYGON_LAYER_ID,
         SYMBOL_LAYER_ID, POINT_LAYER_ID, LINE_LAYER_ID, POLYGON_LAYER_ID].forEach((layerId) => {
-        if (map.getLayer(layerId)) {
-          map.removeLayer(layerId)
-        }
+        if (map.getLayer(layerId)) map.removeLayer(layerId)
       })
       for (const srcId of [HIGHLIGHT_SOURCE_ID, DRAFT_SOURCE_ID, SOURCE_ID]) {
         if (map.getSource(srcId)) map.removeSource(srcId)
@@ -256,11 +213,13 @@ export const MapView: React.FC = () => {
     }
   }, [map])
 
+  // クリック・コンテキストメニュー
   useEffect(() => {
     if (!map) return
 
     const handleClick = (event: maplibregl.MapMouseEvent) => {
-      // 頂点ドラッグ直後はクリックを無視
+      // ラバーバンド直後またはドラッグ直後はクリックを無視
+      if (wasRubberBandingRef.current) return
       if (justDraggedRef.current) return
 
       setContextMenu(null)
@@ -276,21 +235,30 @@ export const MapView: React.FC = () => {
       if (hit.length > 0) {
         const clickedId = hit[0].properties?._id as string | undefined
         if (clickedId) {
-          setSelectedFeatureId((prev) => prev === clickedId ? null : clickedId)
-          // 地図クリック → パネル側ハイライト
+          const isShift = event.originalEvent.shiftKey
+          setSelectedFeatureIds((prev) => {
+            if (isShift) {
+              const next = new Set(prev)
+              if (next.has(clickedId)) next.delete(clickedId)
+              else next.add(clickedId)
+              return next
+            }
+            // 単一選択：同じフィーチャなら解除
+            if (prev.size === 1 && prev.has(clickedId)) return new Set()
+            return new Set([clickedId])
+          })
           flashHighlight(clickedId, setHighlightedPanelFeatureId)
           return
         }
       }
 
-      // 地物未クリック → 選択解除
-      setSelectedFeatureId(null)
+      // 地物未クリック → Shift なしなら選択解除
+      if (!event.originalEvent.shiftKey) {
+        setSelectedFeatureIds(new Set())
+      }
 
-      // 描画モード未選択時は何もしない
       if (!drawMode) return
-
       const coordinate: [number, number] = [event.lngLat.lng, event.lngLat.lat]
-
       if (drawMode === 'point' || drawMode === 'symbol') {
         setFeatures((prev) => ({
           ...prev,
@@ -298,7 +266,6 @@ export const MapView: React.FC = () => {
         }))
         return
       }
-
       setDraftCoords((prev) => [...prev, coordinate])
     }
 
@@ -310,11 +277,7 @@ export const MapView: React.FC = () => {
           const found = featuresRef.current.features.find((f) => f.properties?._id === clickedId)
           if (found) {
             event.preventDefault()
-            setContextMenu({
-              feature: found,
-              x: event.originalEvent.clientX,
-              y: event.originalEvent.clientY,
-            })
+            setContextMenu({ feature: found, x: event.originalEvent.clientX, y: event.originalEvent.clientY })
             return
           }
         }
@@ -329,6 +292,68 @@ export const MapView: React.FC = () => {
       map.off('contextmenu', handleContextMenu)
     }
   }, [map, drawMode, flashHighlight, justDraggedRef])
+
+  // ラバーバンド選択（描画モードなしの時のみ有効）
+  useEffect(() => {
+    if (!map) return
+
+    const onMouseDown = (e: maplibregl.MapMouseEvent) => {
+      if (drawModeRef.current) return // 描画モード中は無効
+      const hit = map.queryRenderedFeatures(e.point, { layers: CLICKABLE_LAYERS })
+      if (hit.length > 0) return // フィーチャクリック時は無効
+      rbDragRef.current = { startPoint: { x: e.point.x, y: e.point.y }, isActive: false }
+      map.dragPan.disable()
+    }
+
+    const onMouseMove = (e: maplibregl.MapMouseEvent) => {
+      if (!rbDragRef.current) return
+      const { startPoint } = rbDragRef.current
+      const dx = e.point.x - startPoint.x
+      const dy = e.point.y - startPoint.y
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return
+      rbDragRef.current.isActive = true
+      setRubberBand({
+        x: Math.min(startPoint.x, e.point.x),
+        y: Math.min(startPoint.y, e.point.y),
+        width: Math.abs(dx),
+        height: Math.abs(dy),
+      })
+    }
+
+    const onMouseUp = (e: maplibregl.MapMouseEvent) => {
+      if (!rbDragRef.current) return
+      const { startPoint, isActive } = rbDragRef.current
+      rbDragRef.current = null
+      map.dragPan.enable()
+      setRubberBand(null)
+      if (!isActive) return
+
+      wasRubberBandingRef.current = true
+      setTimeout(() => { wasRubberBandingRef.current = false }, 50)
+
+      const topLeft: [number, number] = [Math.min(startPoint.x, e.point.x), Math.min(startPoint.y, e.point.y)]
+      const bottomRight: [number, number] = [Math.max(startPoint.x, e.point.x), Math.max(startPoint.y, e.point.y)]
+      const hits = map.queryRenderedFeatures([topLeft, bottomRight], { layers: CLICKABLE_LAYERS })
+      const ids = new Set(hits.map((f) => f.properties?._id as string).filter(Boolean))
+      setSelectedFeatureIds((prev) => {
+        if (e.originalEvent.shiftKey) {
+          const next = new Set(prev)
+          ids.forEach((id) => next.add(id))
+          return next
+        }
+        return ids
+      })
+    }
+
+    map.on('mousedown', onMouseDown)
+    map.on('mousemove', onMouseMove)
+    map.on('mouseup', onMouseUp)
+    return () => {
+      map.off('mousedown', onMouseDown)
+      map.off('mousemove', onMouseMove)
+      map.off('mouseup', onMouseUp)
+    }
+  }, [map])
 
   useEffect(() => {
     if (!map) return
@@ -349,41 +374,30 @@ export const MapView: React.FC = () => {
     }
   }, [map, draftCoords, drawMode, isDrawingPath])
 
-  // ハイライト表示更新
+  // ハイライト表示更新（全選択フィーチャを表示）
   useEffect(() => {
     if (!map) return
     const source = map.getSource(HIGHLIGHT_SOURCE_ID) as maplibregl.GeoJSONSource | undefined
     if (!source || typeof source.setData !== 'function') return
-    const emptyFC: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
-    if (selectedFeatureId) {
-      const selected = features.features.find((f) => f.properties?._id === selectedFeatureId)
-      if (selected) {
-        source.setData({ type: 'FeatureCollection', features: [selected] })
-        return
-      }
-    }
-    source.setData(emptyFC)
-  }, [map, selectedFeatureId, features])
+    const selected = features.features.filter((f) => selectedFeatureIds.has(f.properties?._id as string))
+    source.setData({ type: 'FeatureCollection', features: selected })
+  }, [map, selectedFeatureIds, features])
 
   const finalizeDraft = () => {
     if (!isDrawingPath || !canFinalizeDraft) return
-    const pathMode = drawMode as PathMode
-    const newFeature = createPathFeature(draftCoords, pathMode)
-    setFeatures((prev) => ({
-      ...prev,
-      features: [...prev.features, newFeature]
-    }))
+    const newFeature = createPathFeature(draftCoords, drawMode as PathMode)
+    setFeatures((prev) => ({ ...prev, features: [...prev.features, newFeature] }))
     setDraftCoords([])
   }
 
   const deleteSelectedFeature = useCallback(() => {
-    if (!selectedFeatureId) return
+    if (selectedFeatureIds.size === 0) return
     setFeatures((prev) => ({
       ...prev,
-      features: prev.features.filter((f) => f.properties?._id !== selectedFeatureId)
+      features: prev.features.filter((f) => !selectedFeatureIds.has(f.properties?._id as string)),
     }))
-    setSelectedFeatureId(null)
-  }, [selectedFeatureId])
+    setSelectedFeatureIds(new Set())
+  }, [selectedFeatureIds])
 
   const updateFeatureProperties = useCallback((featureId: string, userProperties: Record<string, string>) => {
     setFeatures((prev) => ({
@@ -402,24 +416,18 @@ export const MapView: React.FC = () => {
     }
     setFeatures({ type: 'FeatureCollection', features: [] })
     setDraftCoords([])
-    setSelectedFeatureId(null)
+    setSelectedFeatureIds(new Set())
     setHighlightedPanelFeatureId(null)
   }, [])
 
-  // パネルからフィーチャクリック → 地図中心移動 + ハイライト
   const handlePanelFeatureClick = useCallback((featureId: string) => {
     const feature = features.features.find((f) => f.properties?._id === featureId)
     if (!feature || !map) return
-
     const center = getFeatureCenter(feature)
-    if (center) {
-      map.flyTo({ center, duration: 300 })
-    }
-
-    // 地図側ハイライト（選択状態 + 0.5秒後に解除）
-    setSelectedFeatureId(featureId)
+    if (center) map.flyTo({ center, duration: 300 })
+    setSelectedFeatureIds(new Set([featureId]))
     flashHighlight(featureId, (id) => {
-      if (!id) setSelectedFeatureId(null)
+      if (!id) setSelectedFeatureIds(new Set())
     })
   }, [features, map, flashHighlight])
 
@@ -430,10 +438,7 @@ export const MapView: React.FC = () => {
       geometry: { type: 'Point', coordinates: [row.lng, row.lat] },
       properties: { _id: nextFeatureId(), drawMode: 'point', ...row.properties },
     }))
-    setFeatures((prev) => ({
-      ...prev,
-      features: [...prev.features, ...newFeatures],
-    }))
+    setFeatures((prev) => ({ ...prev, features: [...prev.features, ...newFeatures] }))
   }, [])
 
   const handleAddressSearch = useCallback((lat: number, lng: number) => {
@@ -501,13 +506,10 @@ export const MapView: React.FC = () => {
       }
       setFeatures({ type: 'FeatureCollection', features: importedFeatures })
       setDraftCoords([])
-      setSelectedFeatureId(null)
+      setSelectedFeatureIds(new Set())
       setHighlightedPanelFeatureId(null)
     } else {
-      setFeatures((prev) => ({
-        ...prev,
-        features: [...prev.features, ...importedFeatures],
-      }))
+      setFeatures((prev) => ({ ...prev, features: [...prev.features, ...importedFeatures] }))
     }
   }, [])
 
@@ -523,6 +525,22 @@ export const MapView: React.FC = () => {
         style={{ width: '100%', height: '100%' }}
       />
 
+      {/* ラバーバンド選択の視覚表示 */}
+      {rubberBand && (
+        <div
+          style={{
+            position: 'absolute',
+            left: rubberBand.x,
+            top: rubberBand.y,
+            width: rubberBand.width,
+            height: rubberBand.height,
+            border: '2px dashed #1a73e8',
+            background: 'rgba(26, 115, 232, 0.08)',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+
       <AppLogo />
 
       <AddressSearchBar onSearch={handleAddressSearch} />
@@ -531,7 +549,8 @@ export const MapView: React.FC = () => {
         drawMode={drawMode}
         isDrawingPath={isDrawingPath}
         canFinalizeDraft={canFinalizeDraft}
-        hasSelectedFeature={selectedFeatureId !== null}
+        hasSelectedFeature={selectedFeatureIds.size > 0}
+        selectedCount={selectedFeatureIds.size}
         canUndo={canUndo}
         canRedo={canRedo}
         onChangeMode={setDrawMode}

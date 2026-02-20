@@ -51,6 +51,8 @@ export function useGeoloniaMap(
       maxZoom: options.maxZoom,
       hash: true,
       attributionControl: false,
+      // Shift+click を選択操作に使うため、MapLibre デフォルトの box zoom を無効化する
+      boxZoom: false,
     });
 
     mapObj.addControl(

@@ -73,7 +73,43 @@ export async function rightClickMapAtOffset(
 }
 
 /**
- * Canvas の中央からの相対座標でドラッグする（頂点移動テスト用）
+ * Shift を押しながら地図の Canvas をクリックする（マルチ選択用）
+ *
+ * MapLibre デフォルトの BoxZoomHandler は Shift+click を横取りして
+ * DOM.suppressClick() を呼ぶため、useGeoloniaMap で boxZoom: false にした上で
+ * clickMapAtOffset と同じ CDP マウスパターンを使用する。
+ */
+export async function shiftClickMapAtOffset(
+  page: Page,
+  offsetX: number = 0,
+  offsetY: number = 0,
+): Promise<void> {
+  const canvas = page.locator(MAP_CANVAS)
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error('Canvas が見つかりません')
+
+  const safeAreaCenterX = 280 + (box.width - 280 - 360) / 2
+  const safeAreaCenterY = box.height / 2
+
+  const x = box.x + safeAreaCenterX + offsetX
+  const y = box.y + safeAreaCenterY + offsetY
+
+  await page.mouse.move(0, 0)
+  await page.waitForTimeout(50)
+  await page.mouse.move(x, y)
+  await page.waitForTimeout(100)
+  await page.keyboard.down('Shift')
+  await page.waitForTimeout(50)
+  await page.mouse.down()
+  await page.waitForTimeout(50)
+  await page.mouse.up()
+  await page.keyboard.up('Shift')
+
+  await page.waitForTimeout(400)
+}
+
+/**
+ * 地図の Canvas 上でドラッグする（ラバーバンド選択・頂点ドラッグ用）
  */
 export async function dragMapAtOffset(
   page: Page,
@@ -100,8 +136,9 @@ export async function dragMapAtOffset(
   await page.waitForTimeout(150)
   await page.mouse.down()
   await page.waitForTimeout(100)
-  // 段階的に移動してドラッグを認識させる
-  const steps = 5
+
+  // 複数ステップで移動してドラッグを確実に認識させる
+  const steps = 10
   for (let i = 1; i <= steps; i++) {
     await page.mouse.move(
       startX + (endX - startX) * (i / steps),
@@ -109,6 +146,7 @@ export async function dragMapAtOffset(
     )
     await page.waitForTimeout(30)
   }
+
   await page.mouse.up()
   await page.waitForTimeout(400)
 }
