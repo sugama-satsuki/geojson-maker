@@ -73,6 +73,47 @@ export async function rightClickMapAtOffset(
 }
 
 /**
+ * Canvas の中央からの相対座標でドラッグする（頂点移動テスト用）
+ */
+export async function dragMapAtOffset(
+  page: Page,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+): Promise<void> {
+  const canvas = page.locator(MAP_CANVAS)
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error('Canvas が見つかりません')
+
+  const safeAreaCenterX = 280 + (box.width - 280 - 360) / 2
+  const safeAreaCenterY = box.height / 2
+
+  const startX = box.x + safeAreaCenterX + fromX
+  const startY = box.y + safeAreaCenterY + fromY
+  const endX = box.x + safeAreaCenterX + toX
+  const endY = box.y + safeAreaCenterY + toY
+
+  await page.mouse.move(0, 0)
+  await page.waitForTimeout(50)
+  await page.mouse.move(startX, startY)
+  await page.waitForTimeout(150)
+  await page.mouse.down()
+  await page.waitForTimeout(100)
+  // 段階的に移動してドラッグを認識させる
+  const steps = 5
+  for (let i = 1; i <= steps; i++) {
+    await page.mouse.move(
+      startX + (endX - startX) * (i / steps),
+      startY + (endY - startY) * (i / steps),
+    )
+    await page.waitForTimeout(30)
+  }
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+}
+
+/**
  * GeoJSON パネルのテキストエリアから FeatureCollection をパースして返す
  */
 export async function getGeoJSONFromPanel(page: Page): Promise<GeoJSON.FeatureCollection> {

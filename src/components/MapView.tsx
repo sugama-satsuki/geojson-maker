@@ -13,6 +13,7 @@ import { createPointFeature, createPathFeature, createDraftFeatureCollection, ne
 import { getFeatureCenter } from '../lib/feature-center'
 import { parseCSV } from '../lib/csv-helpers'
 import { mergeUserProperties } from '../lib/property-helpers'
+import { useVertexEditing, VERTEX_LAYER_ID } from '../hooks/useVertexEditing'
 import './MapView.css'
 
 export type FeatureCollection = GeoJSON.FeatureCollection
@@ -79,6 +80,24 @@ export const MapView: React.FC = () => {
       highlightTimerRef.current = null
     }, HIGHLIGHT_DURATION_MS)
   }, [])
+
+  // 頂点移動をコミット
+  const updateFeatureVertex = useCallback((updatedFeature: GeoJSON.Feature) => {
+    setFeatures((prev) => ({
+      ...prev,
+      features: prev.features.map((f) =>
+        f.properties?._id === updatedFeature.properties?._id ? updatedFeature : f
+      ),
+    }))
+  }, [])
+
+  const { justDraggedRef } = useVertexEditing({
+    map,
+    features,
+    selectedFeatureId,
+    mainSourceId: SOURCE_ID,
+    onCommit: updateFeatureVertex,
+  })
 
   useEffect(() => {
     setDraftCoords([])
@@ -240,7 +259,17 @@ export const MapView: React.FC = () => {
     if (!map) return
 
     const handleClick = (event: maplibregl.MapMouseEvent) => {
+      // 頂点ドラッグ直後はクリックを無視
+      if (justDraggedRef.current) return
+
       setContextMenu(null)
+
+      // 頂点ハンドルをクリックした場合は選択変更しない
+      if (map.getLayer(VERTEX_LAYER_ID)) {
+        const vertexHit = map.queryRenderedFeatures(event.point, { layers: [VERTEX_LAYER_ID] })
+        if (vertexHit.length > 0) return
+      }
+
       // 既存地物をクリックしたか判定
       const hit = map.queryRenderedFeatures(event.point, { layers: CLICKABLE_LAYERS })
       if (hit.length > 0) {
@@ -298,7 +327,7 @@ export const MapView: React.FC = () => {
       map.off('click', handleClick)
       map.off('contextmenu', handleContextMenu)
     }
-  }, [map, drawMode, flashHighlight])
+  }, [map, drawMode, flashHighlight, justDraggedRef])
 
   useEffect(() => {
     if (!map) return
