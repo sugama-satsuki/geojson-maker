@@ -524,7 +524,7 @@ export const MapView: React.FC = () => {
         data-gesture-handling='off'
         data-navigation-control='off'
         data-scale-control='on'
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: 'calc(100% - 360px)', height: '100%' }}
       />
 
       {/* ラバーバンド選択の視覚表示 */}
