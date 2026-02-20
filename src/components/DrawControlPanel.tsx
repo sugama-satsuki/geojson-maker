@@ -9,11 +9,15 @@ type DrawControlPanelProps = {
   isDrawingPath: boolean
   canFinalizeDraft: boolean
   hasSelectedFeature: boolean
+  canUndo: boolean
+  canRedo: boolean
   onChangeMode: (mode: DrawMode | null) => void
   onFinalize: () => void
   onDeleteFeature: () => void
   onResetGeoJSON: () => void
   onShareURL: () => void
+  onUndo: () => void
+  onRedo: () => void
   onImportCSV: (text: string) => void
   onImportGeoJSON: (features: GeoJSON.Feature[], mode: 'replace' | 'merge') => void
 }
@@ -25,11 +29,15 @@ export function DrawControlPanel({
   isDrawingPath,
   canFinalizeDraft,
   hasSelectedFeature,
+  canUndo,
+  canRedo,
   onChangeMode,
   onFinalize,
   onDeleteFeature,
   onResetGeoJSON,
   onShareURL,
+  onUndo,
+  onRedo,
   onImportCSV,
   onImportGeoJSON,
 }: DrawControlPanelProps) {
@@ -143,6 +151,31 @@ export function DrawControlPanel({
         </svg>
       </div>
       <DrawModeSelector selectedMode={drawMode} onChange={onChangeMode} />
+      <div className='draw-control-panel__separator' />
+      <button
+        type='button'
+        onClick={onUndo}
+        disabled={!canUndo}
+        title='元に戻す (Ctrl+Z)'
+        className={`draw-control-panel__action-button${!canUndo ? ' draw-control-panel__action-button--disabled' : ''}`}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 14 4 9 9 4" />
+          <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+        </svg>
+      </button>
+      <button
+        type='button'
+        onClick={onRedo}
+        disabled={!canRedo}
+        title='やり直す (Ctrl+Shift+Z)'
+        className={`draw-control-panel__action-button${!canRedo ? ' draw-control-panel__action-button--disabled' : ''}`}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 14 20 9 15 4" />
+          <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
+        </svg>
+      </button>
       {isDrawingPath && (
         <button
           type='button'

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useUndoable } from '../hooks/useUndoable'
 import type maplibregl from 'maplibre-gl'
 import type { StyleSpecification } from 'maplibre-gl'
 import { useGeoloniaMap } from '../hooks/useGeoloniaMap'
@@ -13,6 +14,7 @@ import { getFeatureCenter } from '../lib/feature-center'
 import { parseCSV } from '../lib/csv-helpers'
 import { mergeUserProperties } from '../lib/property-helpers'
 import { encodeFeaturesToURL, decodeURLToFeatures, URL_SIZE_WARNING_CHARS } from '../lib/url-helpers'
+import { useVertexEditing, VERTEX_LAYER_ID } from '../hooks/useVertexEditing'
 import './MapView.css'
 
 export type FeatureCollection = GeoJSON.FeatureCollection
@@ -48,7 +50,14 @@ export const MapView: React.FC = () => {
   })
 
   const [drawMode, setDrawMode] = useState<DrawMode | null>('point')
-  const [features, setFeatures] = useState<FeatureCollection>({ type: 'FeatureCollection', features: [] })
+  const {
+    current: features,
+    set: setFeatures,
+    undo: undoFeatures,
+    redo: redoFeatures,
+    canUndo,
+    canRedo,
+  } = useUndoable<FeatureCollection>({ type: 'FeatureCollection', features: [] })
   const [draftCoords, setDraftCoords] = useState<[number, number][]>([])
   const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null)
   const [highlightedPanelFeatureId, setHighlightedPanelFeatureId] = useState<string | null>(null)
@@ -72,6 +81,24 @@ export const MapView: React.FC = () => {
       highlightTimerRef.current = null
     }, HIGHLIGHT_DURATION_MS)
   }, [])
+
+  // 頂点移動をコミット
+  const updateFeatureVertex = useCallback((updatedFeature: GeoJSON.Feature) => {
+    setFeatures((prev) => ({
+      ...prev,
+      features: prev.features.map((f) =>
+        f.properties?._id === updatedFeature.properties?._id ? updatedFeature : f
+      ),
+    }))
+  }, [])
+
+  const { justDraggedRef } = useVertexEditing({
+    map,
+    features,
+    selectedFeatureId,
+    mainSourceId: SOURCE_ID,
+    onCommit: updateFeatureVertex,
+  })
 
   useEffect(() => {
     setDraftCoords([])
@@ -233,7 +260,17 @@ export const MapView: React.FC = () => {
     if (!map) return
 
     const handleClick = (event: maplibregl.MapMouseEvent) => {
+      // 頂点ドラッグ直後はクリックを無視
+      if (justDraggedRef.current) return
+
       setContextMenu(null)
+
+      // 頂点ハンドルをクリックした場合は選択変更しない
+      if (map.getLayer(VERTEX_LAYER_ID)) {
+        const vertexHit = map.queryRenderedFeatures(event.point, { layers: [VERTEX_LAYER_ID] })
+        if (vertexHit.length > 0) return
+      }
+
       // 既存地物をクリックしたか判定
       const hit = map.queryRenderedFeatures(event.point, { layers: CLICKABLE_LAYERS })
       if (hit.length > 0) {
@@ -291,7 +328,7 @@ export const MapView: React.FC = () => {
       map.off('click', handleClick)
       map.off('contextmenu', handleContextMenu)
     }
-  }, [map, drawMode, flashHighlight])
+  }, [map, drawMode, flashHighlight, justDraggedRef])
 
   useEffect(() => {
     if (!map) return
@@ -404,6 +441,26 @@ export const MapView: React.FC = () => {
     map.flyTo({ center: [lng, lat], zoom: 16 })
   }, [map])
 
+  // Undo/Redo キーボードショートカット
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable) return
+      const isMac = /mac/i.test(navigator.userAgent)
+      const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey
+      if (!ctrlOrCmd) return
+      if (e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        undoFeatures()
+      } else if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
+        e.preventDefault()
+        redoFeatures()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undoFeatures, redoFeatures])
+
   const handleCopy = useCallback((result: { message: string; type: 'success' | 'error' }) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
     setToast(result)
@@ -475,11 +532,15 @@ export const MapView: React.FC = () => {
         isDrawingPath={isDrawingPath}
         canFinalizeDraft={canFinalizeDraft}
         hasSelectedFeature={selectedFeatureId !== null}
+        canUndo={canUndo}
+        canRedo={canRedo}
         onChangeMode={setDrawMode}
         onFinalize={finalizeDraft}
         onDeleteFeature={deleteSelectedFeature}
         onResetGeoJSON={resetGeoJSON}
         onShareURL={copyShareURL}
+        onUndo={undoFeatures}
+        onRedo={redoFeatures}
         onImportCSV={handleImportCSV}
         onImportGeoJSON={handleImportGeoJSON}
       />
