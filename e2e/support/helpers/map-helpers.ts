@@ -130,22 +130,25 @@ export async function dragMapAtOffset(
   const endX = box.x + safeAreaCenterX + toX
   const endY = box.y + safeAreaCenterY + toY
 
+  await page.mouse.move(0, 0)
+  await page.waitForTimeout(50)
   await page.mouse.move(startX, startY)
-  await page.waitForTimeout(100)
+  await page.waitForTimeout(150)
   await page.mouse.down()
   await page.waitForTimeout(100)
 
-  // 複数ステップで移動してラバーバンドを確実に起動する
+  // 複数ステップで移動してドラッグを確実に認識させる
   const steps = 10
   for (let i = 1; i <= steps; i++) {
-    const ix = startX + ((endX - startX) * i) / steps
-    const iy = startY + ((endY - startY) * i) / steps
-    await page.mouse.move(ix, iy)
-    await page.waitForTimeout(20)
+    await page.mouse.move(
+      startX + (endX - startX) * (i / steps),
+      startY + (endY - startY) * (i / steps),
+    )
+    await page.waitForTimeout(30)
   }
 
   await page.mouse.up()
-  await page.waitForTimeout(300)
+  await page.waitForTimeout(400)
 }
 
 /**
