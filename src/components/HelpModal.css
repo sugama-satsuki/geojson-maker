@@ -48,6 +48,12 @@
   overflow-y: auto;
   max-height: calc(80vh - 64px);
   padding: 0 24px 24px;
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE / Edge */
+}
+
+.help-modal__body::-webkit-scrollbar {
+  display: none;                  /* Chrome / Safari */
 }
 
 .help-modal__title {
