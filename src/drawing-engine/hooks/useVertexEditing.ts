@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import type maplibregl from 'maplibre-gl'
-import type { FeatureCollection } from '../components/MapView'
 
 export const VERTEX_SOURCE_ID = 'geojson-maker-vertex'
 export const VERTEX_LAYER_ID = 'geojson-maker-vertex-layer'
@@ -60,7 +59,7 @@ function applyVertexMove(
 
 type UseVertexEditingOptions = {
   map: maplibregl.Map | null
-  features: FeatureCollection
+  features: GeoJSON.FeatureCollection
   selectedFeatureId: string | null
   mainSourceId: string
   onCommit: (updatedFeature: GeoJSON.Feature) => void

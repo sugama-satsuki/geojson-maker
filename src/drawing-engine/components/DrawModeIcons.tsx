@@ -1,4 +1,4 @@
-import type { DrawMode } from './DrawModeSelector'
+import type { DrawMode } from '../types'
 
 function PointIcon() {
   return (
