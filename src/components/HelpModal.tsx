@@ -56,20 +56,22 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
           </button>
         </div>
 
-        {sections.map((section) => (
-          <div key={section.title} className='help-modal__section'>
-            <h3 className='help-modal__section-title'>{section.title}</h3>
-            {section.items.map((item) => (
-              <div key={item.label} className='help-modal__item'>
-                <span className='help-modal__item-label'>{item.label}</span>
-                <span className='help-modal__item-description'>{item.description}</span>
-                {item.shortcut && (
-                  <span className='help-modal__item-shortcut'>{item.shortcut}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        ))}
+        <div className='help-modal__body'>
+          {sections.map((section) => (
+            <div key={section.title} className='help-modal__section'>
+              <h3 className='help-modal__section-title'>{section.title}</h3>
+              {section.items.map((item) => (
+                <div key={item.label} className='help-modal__item'>
+                  <span className='help-modal__item-label'>{item.label}</span>
+                  <span className='help-modal__item-description'>{item.description}</span>
+                  {item.shortcut && (
+                    <span className='help-modal__item-shortcut'>{item.shortcut}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

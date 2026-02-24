@@ -15,9 +15,8 @@
   width: 480px;
   max-width: calc(100vw - 32px);
   max-height: 80vh;
-  overflow-y: auto;
+  overflow: hidden;
   box-sizing: border-box;
-  padding: 24px;
   border-radius: 20px;
 
   background:
@@ -41,7 +40,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 24px 24px 0;
   margin-bottom: 20px;
+}
+
+.help-modal__body {
+  overflow-y: auto;
+  max-height: calc(80vh - 64px);
+  padding: 0 24px 24px;
 }
 
 .help-modal__title {
