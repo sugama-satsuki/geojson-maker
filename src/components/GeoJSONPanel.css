@@ -372,3 +372,66 @@
     0 4px 12px rgba(16, 185, 129, 0.25),
     0 0 20px rgba(16, 185, 129, 0.1);
 }
+
+/* --- Separator --- */
+
+.geojson-panel__separator {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.15), transparent);
+}
+
+/* --- Import Buttons Row --- */
+
+.geojson-panel__import-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.geojson-panel__import-buttons .geojson-panel__button {
+  flex: 1;
+}
+
+/* --- Secondary Button --- */
+
+.geojson-panel__button--secondary {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #374151;
+  box-shadow: none;
+}
+
+.geojson-panel__button--secondary:hover {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(26, 115, 232, 0.08) 0%,
+      rgba(124, 58, 237, 0.06) 100%
+    );
+  border-color: rgba(26, 115, 232, 0.25);
+  color: var(--color-blue);
+  box-shadow: 0 0 12px rgba(26, 115, 232, 0.1);
+  transform: translateY(-1px);
+  filter: none;
+}
+
+/* --- Danger Button --- */
+
+.geojson-panel__button--danger {
+  background:
+    linear-gradient(
+      160deg,
+      rgba(239, 68, 68, 0.08) 0%,
+      rgba(239, 68, 68, 0.04) 100%
+    );
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: var(--color-danger);
+  box-shadow: none;
+}
+
+.geojson-panel__button--danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+  transform: translateY(-1px);
+  filter: none;
+}

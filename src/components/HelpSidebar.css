@@ -1,0 +1,217 @@
+/* --- Help Tab (左下固定タブ) --- */
+
+.help-tab {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.88) 0%,
+      rgba(237, 233, 254, 0.7) 100%
+    );
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 2px 6px rgba(26, 115, 232, 0.06);
+
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+
+  transition:
+    background var(--transition-normal),
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal),
+    transform var(--transition-fast);
+}
+
+.help-tab:hover {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(26, 115, 232, 0.08) 0%,
+      rgba(124, 58, 237, 0.06) 100%
+    );
+  border-color: rgba(26, 115, 232, 0.25);
+  color: var(--color-blue);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.1),
+    0 0 12px rgba(26, 115, 232, 0.12);
+  transform: translateY(-1px);
+}
+
+.help-tab__icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* --- Help Sidebar --- */
+
+.help-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 50vw;
+  max-width: 600px;
+  min-width: 320px;
+  z-index: 100;
+
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  background:
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(237, 233, 254, 0.88) 50%,
+      rgba(219, 234, 254, 0.92) 100%
+    );
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    8px 0 32px rgba(0, 0, 0, 0.12),
+    2px 0 8px rgba(124, 58, 237, 0.04);
+
+  animation: help-sidebar-slide-in 0.25s ease-out;
+}
+
+@keyframes help-sidebar-slide-in {
+  from {
+    transform: translateX(-100%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.help-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.08);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(26, 115, 232, 0.06) 0%,
+      rgba(124, 58, 237, 0.04) 100%
+    );
+}
+
+.help-sidebar__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--color-blue) 0%, var(--color-purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.help-sidebar__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 18px;
+  color: #6b7280;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.help-sidebar__close:hover {
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--color-purple);
+}
+
+.help-sidebar__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
+  scrollbar-width: thin;
+}
+
+.help-sidebar__section {
+  margin-bottom: 20px;
+}
+
+.help-sidebar__section:last-child {
+  margin-bottom: 0;
+}
+
+.help-sidebar__section-title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-purple);
+  opacity: 0.85;
+}
+
+.help-sidebar__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.08);
+}
+
+.help-sidebar__item:last-child {
+  border-bottom: none;
+}
+
+.help-sidebar__item-label {
+  flex-shrink: 0;
+  min-width: 120px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.help-sidebar__item-description {
+  flex: 1;
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.help-sidebar__item-shortcut {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(26, 115, 232, 0.08);
+  border: 1px solid rgba(26, 115, 232, 0.18);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: monospace;
+  color: var(--color-blue);
+  white-space: nowrap;
+}

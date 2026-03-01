@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { DrawMode, DrawModeSelector } from './DrawModeSelector'
 import { clampPosition } from '../lib/clamp-position'
-import { parseGeoJSONImport } from '../lib/geojson-helpers'
 import './DrawControlPanel.css'
 
 type DrawControlPanelProps = {
@@ -15,13 +14,8 @@ type DrawControlPanelProps = {
   onChangeMode: (mode: DrawMode | null) => void
   onFinalize: () => void
   onDeleteFeature: () => void
-  onResetGeoJSON: () => void
-  onShareURL: () => void
   onUndo: () => void
   onRedo: () => void
-  onImportCSV: (text: string) => void
-  onImportGeoJSON: (features: GeoJSON.Feature[], mode: 'replace' | 'merge') => void
-  onOpenHelp: () => void
 }
 
 const INITIAL_POSITION = { x: 10, y: 54 }
@@ -37,37 +31,13 @@ export function DrawControlPanel({
   onChangeMode,
   onFinalize,
   onDeleteFeature,
-  onResetGeoJSON,
-  onShareURL,
   onUndo,
   onRedo,
-  onImportCSV,
-  onImportGeoJSON,
-  onOpenHelp,
 }: DrawControlPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState(INITIAL_POSITION)
   const isDraggingRef = useRef(false)
   const dragOffsetRef = useRef({ x: 0, y: 0 })
-  const [isImportHovered, setIsImportHovered] = useState(false)
-  const importHoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const csvFileInputRef = useRef<HTMLInputElement>(null)
-  const geojsonFileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleImportMouseEnter = useCallback(() => {
-    if (importHoverTimerRef.current) {
-      clearTimeout(importHoverTimerRef.current)
-      importHoverTimerRef.current = null
-    }
-    setIsImportHovered(true)
-  }, [])
-
-  const handleImportMouseLeave = useCallback(() => {
-    importHoverTimerRef.current = setTimeout(() => {
-      setIsImportHovered(false)
-      importHoverTimerRef.current = null
-    }, 200)
-  }, [])
 
   const onGripMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -105,34 +75,6 @@ export function DrawControlPanel({
       window.removeEventListener('mouseup', onMouseUp)
     }
   }, [])
-
-  const handleCSVFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      onImportCSV(reader.result as string)
-    }
-    reader.readAsText(file)
-    e.target.value = ''
-  }, [onImportCSV])
-
-  const handleGeoJSONFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      try {
-        const features = parseGeoJSONImport(reader.result as string)
-        const replace = window.confirm('既存のフィーチャを置き換えますか？\n「OK」→ 置換\n「キャンセル」→ マージ（追加）')
-        onImportGeoJSON(features, replace ? 'replace' : 'merge')
-      } catch (err) {
-        console.error('GeoJSON のインポートに失敗しました', err)
-      }
-    }
-    reader.readAsText(file)
-    e.target.value = ''
-  }, [onImportGeoJSON])
 
   return (
     <div
@@ -206,85 +148,6 @@ export function DrawControlPanel({
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
         </svg>
       </button>
-      <button
-        type='button'
-        onClick={onResetGeoJSON}
-        title='GeoJSONを初期化'
-        aria-label='GeoJSONを初期化'
-        className='draw-control-panel__action-button draw-control-panel__action-button--reset'
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="1 4 1 10 7 10" />
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-        </svg>
-      </button>
-      <button
-        type='button'
-        onClick={onShareURL}
-        title='URLをコピー'
-        aria-label='URLをコピー'
-        className='draw-control-panel__action-button draw-control-panel__action-button--share'
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="18" cy="5" r="3" />
-          <circle cx="6" cy="12" r="3" />
-          <circle cx="18" cy="19" r="3" />
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-        </svg>
-      </button>
-      <button
-        type='button'
-        onClick={onOpenHelp}
-        title='使い方'
-        aria-label='使い方を見る'
-        className='draw-control-panel__action-button draw-control-panel__action-button--help'
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-          <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
-      </button>
-      <div className='draw-control-panel__separator' />
-      <div
-        className='draw-control-panel__import-wrapper'
-        onMouseEnter={handleImportMouseEnter}
-        onMouseLeave={handleImportMouseLeave}
-      >
-        <button
-          type='button'
-          title='インポート'
-          aria-label='インポート'
-          className='draw-control-panel__action-button draw-control-panel__action-button--import'
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-        </button>
-        {isImportHovered && (
-          <div className='draw-control-panel__import-popup'>
-            <button
-              type='button'
-              className='draw-control-panel__import-popup-btn'
-              onClick={() => csvFileInputRef.current?.click()}
-            >
-              CSVインポート
-            </button>
-            <button
-              type='button'
-              className='draw-control-panel__import-popup-btn'
-              onClick={() => geojsonFileInputRef.current?.click()}
-            >
-              GeoJSONインポート
-            </button>
-          </div>
-        )}
-      </div>
-      <input ref={csvFileInputRef} type='file' accept='.csv' onChange={handleCSVFileChange} style={{ display: 'none' }} />
-      <input ref={geojsonFileInputRef} type='file' accept='.geojson,.json' onChange={handleGeoJSONFileChange} style={{ display: 'none' }} />
     </div>
   )
 }
