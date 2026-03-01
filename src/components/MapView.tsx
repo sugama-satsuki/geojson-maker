@@ -558,6 +558,7 @@ export const MapView: React.FC = () => {
         onChangeMode={setDrawMode}
         onFinalize={finalizeDraft}
         onDeleteFeature={deleteSelectedFeature}
+        onResetGeoJSON={resetGeoJSON}
         onUndo={undoFeatures}
         onRedo={redoFeatures}
       />
@@ -570,7 +571,6 @@ export const MapView: React.FC = () => {
         onImportCSV={handleImportCSV}
         onImportGeoJSON={handleImportGeoJSON}
         onShareURL={copyShareURL}
-        onResetGeoJSON={resetGeoJSON}
       />
 
       {contextMenu && (

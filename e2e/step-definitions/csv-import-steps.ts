@@ -26,6 +26,6 @@ When('CSVファイルをインポートする:', async function (this: CustomWor
 })
 
 Then('{string} インポートボタンが表示されている', async function (this: CustomWorld, buttonText: string) {
-  const button = this.page.locator(`${GEOJSON_PANEL} .geojson-panel__button`, { hasText: buttonText })
+  const button = this.page.locator(`${GEOJSON_PANEL} .geojson-panel__header-button`, { hasText: buttonText })
   await expect(button).toBeVisible()
 })

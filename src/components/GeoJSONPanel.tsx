@@ -17,7 +17,6 @@ type GeoJSONPanelProps = {
   onImportCSV: (text: string) => void
   onImportGeoJSON: (features: GeoJSON.Feature[], mode: 'replace' | 'merge') => void
   onShareURL: () => void
-  onResetGeoJSON: () => void
 }
 
 export function GeoJSONPanel({
@@ -28,7 +27,6 @@ export function GeoJSONPanel({
   onImportCSV,
   onImportGeoJSON,
   onShareURL,
-  onResetGeoJSON,
 }: GeoJSONPanelProps) {
   const jsonValue = useMemo(() => JSON.stringify(featureCollection, null, 2), [featureCollection])
   const [copied, setCopied] = useState(false)
@@ -119,8 +117,38 @@ export function GeoJSONPanel({
   return (
     <div className='geojson-panel'>
       <div className='geojson-panel__header'>
-        <div className='geojson-panel__title'>GeoJSON</div>
-        <div className='geojson-panel__count'>feature：{featureCollection.features.length}件</div>
+        <div className='geojson-panel__header-left'>
+          <div className='geojson-panel__title'>GeoJSON</div>
+          <div className='geojson-panel__count'>feature：{featureCollection.features.length}件</div>
+        </div>
+        <div className='geojson-panel__header-actions'>
+          <button
+            type='button'
+            className='geojson-panel__header-button'
+            onClick={() => csvFileInputRef.current?.click()}
+            title='CSVインポート'
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            CSV
+          </button>
+          <button
+            type='button'
+            className='geojson-panel__header-button'
+            onClick={() => geojsonFileInputRef.current?.click()}
+            title='GeoJSONインポート'
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            GeoJSON
+          </button>
+        </div>
       </div>
 
       {featureCollection.features.length > 0 && (
@@ -178,22 +206,6 @@ export function GeoJSONPanel({
             {downloaded ? 'ダウンロード完了' : 'geojsonをダウンロード'}
         </button>
         <div className='geojson-panel__separator' />
-        <div className='geojson-panel__import-buttons'>
-          <button
-            type='button'
-            className='geojson-panel__button geojson-panel__button--secondary'
-            onClick={() => csvFileInputRef.current?.click()}
-          >
-            CSVインポート
-          </button>
-          <button
-            type='button'
-            className='geojson-panel__button geojson-panel__button--secondary'
-            onClick={() => geojsonFileInputRef.current?.click()}
-          >
-            GeoJSONインポート
-          </button>
-        </div>
         <button
           type='button'
           onClick={onShareURL}
@@ -201,14 +213,6 @@ export function GeoJSONPanel({
           className='geojson-panel__button geojson-panel__button--secondary'
         >
           URLをコピー
-        </button>
-        <button
-          type='button'
-          onClick={onResetGeoJSON}
-          aria-label='GeoJSONを初期化'
-          className='geojson-panel__button geojson-panel__button--danger'
-        >
-          リセット
         </button>
       </div>
       <input ref={csvFileInputRef} type='file' accept='.csv' onChange={handleCSVFileChange} style={{ display: 'none' }} />

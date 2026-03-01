@@ -2,15 +2,15 @@
 
 .help-tab {
   position: fixed;
-  bottom: 16px;
-  left: 16px;
+  bottom: 72px;
+  left: 0;
   z-index: 10;
 
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  border-radius: 10px;
+  border-radius: 0 10px 10px 0;
 
   background:
     linear-gradient(

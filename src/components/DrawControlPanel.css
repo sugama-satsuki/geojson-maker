@@ -135,6 +135,20 @@
   background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
 }
 
+.draw-control-panel__action-button--reset {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: linear-gradient(160deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.04));
+  color: var(--color-danger);
+}
+
+.draw-control-panel__action-button--reset:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: var(--color-danger);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+  transform: scale(1.05);
+}
+
 .draw-control-panel__action-button--disabled {
   opacity: 0.35;
   cursor: not-allowed;
