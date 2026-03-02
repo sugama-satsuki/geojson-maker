@@ -10,7 +10,7 @@ export { VertexContextMenu } from './components/VertexContextMenu'
 
 // Main hook
 export { useDrawingEngine } from './hooks/useDrawingEngine'
-export type { DrawingEngineOptions, DrawingEngineResult, ContextMenuEvent } from './hooks/useDrawingEngine'
+export type { DrawingEngineOptions, DrawingEngineResult, ContextMenuEvent, DraftContextMenuEvent } from './hooks/useDrawingEngine'
 
 // Sub hooks
 export { useUndoable } from './hooks/useUndoable'

@@ -28,6 +28,14 @@ When(
 )
 
 When(
+  '地図の中央から右に {int}px の位置のドラフトポイントを右クリックする',
+  { timeout: 15000 },
+  async function (this: CustomWorld, offsetX: number) {
+    await rightClickMapAtOffset(this.page, offsetX, 0)
+  }
+)
+
+When(
   '地図の中央から右に {int}px の位置の頂点をクリック選択する',
   { timeout: 15000 },
   async function (this: CustomWorld, offsetX: number) {

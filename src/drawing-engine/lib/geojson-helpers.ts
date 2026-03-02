@@ -37,12 +37,12 @@ export function createDraftFeatureCollection(
     return { type: 'FeatureCollection', features }
   }
 
-  // 頂点を Point として追加
-  for (const coord of coords) {
+  // 頂点を Point として追加（draftIndex で識別可能にする）
+  for (let i = 0; i < coords.length; i++) {
     features.push({
       type: 'Feature',
-      geometry: { type: 'Point', coordinates: coord },
-      properties: {}
+      geometry: { type: 'Point', coordinates: coords[i] },
+      properties: { draftIndex: i }
     })
   }
 

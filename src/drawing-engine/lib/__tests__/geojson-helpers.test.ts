@@ -186,6 +186,7 @@ describe('createDraftFeatureCollection', () => {
     const result = createDraftFeatureCollection([[0, 0]], 'line')
     expect(result.features).toHaveLength(1)
     expect(result.features[0].geometry).toEqual({ type: 'Point', coordinates: [0, 0] })
+    expect(result.features[0].properties).toEqual({ draftIndex: 0 })
   })
 
   it('2点(line) で LineString + 2 Points を返す', () => {
@@ -194,6 +195,9 @@ describe('createDraftFeatureCollection', () => {
     const types = result.features.map((f) => f.geometry.type)
     expect(types.filter((t) => t === 'Point')).toHaveLength(2)
     expect(types.filter((t) => t === 'LineString')).toHaveLength(1)
+    // draftIndex が正しく付与される
+    expect(result.features[0].properties).toEqual({ draftIndex: 0 })
+    expect(result.features[1].properties).toEqual({ draftIndex: 1 })
   })
 
   it('2点(polygon) で LineString + 2 Points を返す（3点未満のため）', () => {
@@ -224,5 +228,11 @@ describe('createDraftFeatureCollection', () => {
     const polygon = result.features.find((f) => f.geometry.type === 'Polygon')!
     const ring = (polygon.geometry as GeoJSON.Polygon).coordinates[0]
     expect(ring[0]).toEqual(ring[ring.length - 1])
+
+    // draftIndex が正しく付与される
+    const points = result.features.filter((f) => f.geometry.type === 'Point')
+    expect(points[0].properties).toEqual({ draftIndex: 0 })
+    expect(points[1].properties).toEqual({ draftIndex: 1 })
+    expect(points[2].properties).toEqual({ draftIndex: 2 })
   })
 })
