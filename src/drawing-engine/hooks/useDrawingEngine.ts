@@ -4,6 +4,7 @@ import type { DrawMode, PathMode } from '../types'
 import type { DrawControlPanelProps } from '../components/DrawControlPanel'
 import { useUndoable } from './useUndoable'
 import { useVertexEditing, VERTEX_LAYER_ID } from './useVertexEditing'
+import type { SelectedVertex, VertexContextMenuEvent } from './useVertexEditing'
 import { createPointFeature, createPathFeature, createDraftFeatureCollection, nextFeatureId } from '../lib/geojson-helpers'
 import { parseCSV } from '../lib/csv-helpers'
 
@@ -46,6 +47,8 @@ export type DrawingEngineResult = {
   rubberBand: { x: number; y: number; width: number; height: number } | null
   highlightedPanelFeatureId: string | null
   contextMenuEvent: ContextMenuEvent | null
+  vertexContextMenuEvent: VertexContextMenuEvent | null
+  selectedVertex: SelectedVertex | null
 
   // アクション
   setDrawMode: (mode: DrawMode | null) => void
@@ -53,12 +56,14 @@ export type DrawingEngineResult = {
   setSelectedFeatureIds: (ids: Set<string> | ((prev: Set<string>) => Set<string>)) => void
   finalizeDraft: () => void
   deleteSelectedFeatures: () => void
+  deleteSelectedVertex: () => void
   resetGeoJSON: () => void
   undo: () => void
   redo: () => void
   importCSV: (text: string) => void
   importGeoJSON: (features: GeoJSON.Feature[], mode: 'replace' | 'merge') => void
   closeContextMenu: () => void
+  closeVertexContextMenu: () => void
 
   // DrawControlPanel に渡す props（onShareURL は含まない）
   controlPanelProps: Omit<DrawControlPanelProps, 'onShareURL'>
@@ -84,6 +89,8 @@ export function useDrawingEngine(
   const [selectedFeatureIds, setSelectedFeatureIds] = useState<Set<string>>(new Set())
   const [highlightedPanelFeatureId, setHighlightedPanelFeatureId] = useState<string | null>(null)
   const [contextMenu, setContextMenu] = useState<ContextMenuEvent | null>(null)
+  const [vertexContextMenu, setVertexContextMenu] = useState<VertexContextMenuEvent | null>(null)
+  const [selectedVertex, setSelectedVertex] = useState<SelectedVertex | null>(null)
   const [rubberBand, setRubberBand] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
 
   const featuresRef = useRef(features)
@@ -121,12 +128,15 @@ export function useDrawingEngine(
   // 単一選択時のみ頂点編集を有効にする
   const selectedFeatureId = selectedFeatureIds.size === 1 ? [...selectedFeatureIds][0] : null
 
-  const { justDraggedRef } = useVertexEditing({
+  const { justDraggedRef, deleteSelectedVertex } = useVertexEditing({
     map,
     features,
     selectedFeatureId,
     mainSourceId: SOURCE_ID,
     onCommit: updateFeatureVertex,
+    selectedVertex,
+    onVertexSelect: setSelectedVertex,
+    onVertexContextMenu: setVertexContextMenu,
   })
 
   // drawMode 変更時にリセット
@@ -134,6 +144,8 @@ export function useDrawingEngine(
     setDraftCoords([])
     setSelectedFeatureIds(new Set())
     setContextMenu(null)
+    setVertexContextMenu(null)
+    setSelectedVertex(null)
   }, [drawMode])
 
   // MapLibre ソース・レイヤーのセットアップ
@@ -282,6 +294,15 @@ export function useDrawingEngine(
     }
 
     const handleContextMenu = (event: maplibregl.MapMouseEvent) => {
+      // 頂点の右クリックは useVertexEditing 側で処理するのでスキップ
+      if (map.getLayer(VERTEX_LAYER_ID)) {
+        const vertexHit = map.queryRenderedFeatures(event.point, { layers: [VERTEX_LAYER_ID] })
+        if (vertexHit.length > 0) {
+          setContextMenu(null)
+          return
+        }
+      }
+
       const hit = map.queryRenderedFeatures(event.point, { layers: CLICKABLE_LAYERS })
       if (hit.length > 0) {
         const clickedId = hit[0].properties?._id as string | undefined
@@ -289,12 +310,14 @@ export function useDrawingEngine(
           const found = featuresRef.current.features.find((f) => f.properties?._id === clickedId)
           if (found) {
             event.preventDefault()
+            setVertexContextMenu(null)
             setContextMenu({ feature: found, x: event.originalEvent.clientX, y: event.originalEvent.clientY })
             return
           }
         }
       }
       setContextMenu(null)
+      setVertexContextMenu(null)
     }
 
     map.on('click', handleClick)
@@ -473,6 +496,10 @@ export function useDrawingEngine(
     setContextMenu(null)
   }, [])
 
+  const closeVertexContextMenu = useCallback(() => {
+    setVertexContextMenu(null)
+  }, [])
+
   const controlPanelProps: DrawControlPanelProps = {
     drawMode,
     isDrawingPath,
@@ -500,17 +527,21 @@ export function useDrawingEngine(
     rubberBand,
     highlightedPanelFeatureId,
     contextMenuEvent: contextMenu,
+    vertexContextMenuEvent: vertexContextMenu,
+    selectedVertex,
     setDrawMode,
     setFeatures,
     setSelectedFeatureIds,
     finalizeDraft,
     deleteSelectedFeatures,
+    deleteSelectedVertex,
     resetGeoJSON,
     undo: undoFeatures,
     redo: redoFeatures,
     importCSV,
     importGeoJSON,
     closeContextMenu,
+    closeVertexContextMenu,
     controlPanelProps,
   }
 }

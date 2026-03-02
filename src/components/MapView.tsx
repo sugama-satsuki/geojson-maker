@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import type { StyleSpecification } from 'maplibre-gl'
 import { useGeoloniaMap } from '../hooks/useGeoloniaMap'
-import { DrawControlPanel, useDrawingEngine } from '../drawing-engine'
+import { DrawControlPanel, useDrawingEngine, VertexContextMenu, canDeleteVertex } from '../drawing-engine'
 import { GeoJSONPanel } from './GeoJSONPanel'
 import { FeatureContextMenu } from './FeatureContextMenu'
 import { AddressSearchBar } from './AddressSearchBar'
@@ -138,6 +138,19 @@ export const MapView: React.FC = () => {
           onCopy={handleCopy}
         />
       )}
+
+      {engine.vertexContextMenuEvent && (() => {
+        const vtx = engine.vertexContextMenuEvent
+        const feature = engine.features.features.find((f) => f.properties?._id === vtx.featureId)
+        return (
+          <VertexContextMenu
+            position={{ x: vtx.x, y: vtx.y }}
+            canDelete={feature ? canDeleteVertex(feature) : false}
+            onDelete={() => { engine.deleteSelectedVertex(); engine.closeVertexContextMenu() }}
+            onClose={engine.closeVertexContextMenu}
+          />
+        )
+      })()}
 
       {toast && (
         <div className={`map-toast map-toast--${toast.type}`}>
