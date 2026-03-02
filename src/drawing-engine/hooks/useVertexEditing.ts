@@ -1,12 +1,27 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import type maplibregl from 'maplibre-gl'
-import type { FeatureCollection } from '../components/MapView'
+import { canDeleteVertex, applyVertexDelete } from '../lib/vertex-helpers'
 
 export const VERTEX_SOURCE_ID = 'geojson-maker-vertex'
 export const VERTEX_LAYER_ID = 'geojson-maker-vertex-layer'
 
+export type SelectedVertex = {
+  featureId: string
+  vertexIndex: number
+}
+
+export type VertexContextMenuEvent = {
+  featureId: string
+  vertexIndex: number
+  x: number
+  y: number
+}
+
 /** ライン / ポリゴンの頂点ハンドル (Point Feature) を計算する */
-function getVertexHandles(feature: GeoJSON.Feature): GeoJSON.FeatureCollection {
+function getVertexHandles(
+  feature: GeoJSON.Feature,
+  selectedVertex: SelectedVertex | null,
+): GeoJSON.FeatureCollection {
   const handles: GeoJSON.Feature[] = []
   const geom = feature.geometry
   const featureId = feature.properties?._id as string
@@ -16,7 +31,11 @@ function getVertexHandles(feature: GeoJSON.Feature): GeoJSON.FeatureCollection {
       handles.push({
         type: 'Feature',
         geometry: { type: 'Point', coordinates: coord },
-        properties: { featureId, vertexIndex: i },
+        properties: {
+          featureId,
+          vertexIndex: i,
+          selected: selectedVertex?.featureId === featureId && selectedVertex?.vertexIndex === i,
+        },
       })
     })
   } else if (geom.type === 'Polygon') {
@@ -25,7 +44,11 @@ function getVertexHandles(feature: GeoJSON.Feature): GeoJSON.FeatureCollection {
       handles.push({
         type: 'Feature',
         geometry: { type: 'Point', coordinates: coord },
-        properties: { featureId, vertexIndex: i },
+        properties: {
+          featureId,
+          vertexIndex: i,
+          selected: selectedVertex?.featureId === featureId && selectedVertex?.vertexIndex === i,
+        },
       })
     })
   }
@@ -60,10 +83,13 @@ function applyVertexMove(
 
 type UseVertexEditingOptions = {
   map: maplibregl.Map | null
-  features: FeatureCollection
+  features: GeoJSON.FeatureCollection
   selectedFeatureId: string | null
   mainSourceId: string
   onCommit: (updatedFeature: GeoJSON.Feature) => void
+  selectedVertex: SelectedVertex | null
+  onVertexSelect: (vertex: SelectedVertex | null) => void
+  onVertexContextMenu: (event: VertexContextMenuEvent | null) => void
 }
 
 export function useVertexEditing({
@@ -72,6 +98,9 @@ export function useVertexEditing({
   selectedFeatureId,
   mainSourceId,
   onCommit,
+  selectedVertex,
+  onVertexSelect,
+  onVertexContextMenu,
 }: UseVertexEditingOptions) {
   /** クリックハンドラと共有する「ドラッグ直後フラグ」 */
   const justDraggedRef = useRef(false)
@@ -87,6 +116,18 @@ export function useVertexEditing({
   const featuresRef = useRef(features)
   featuresRef.current = features
 
+  /** 最新の selectedVertex を ref で保持 */
+  const selectedVertexRef = useRef(selectedVertex)
+  selectedVertexRef.current = selectedVertex
+
+  /** 最新のコールバックを ref で保持 */
+  const onCommitRef = useRef(onCommit)
+  onCommitRef.current = onCommit
+  const onVertexSelectRef = useRef(onVertexSelect)
+  onVertexSelectRef.current = onVertexSelect
+  const onVertexContextMenuRef = useRef(onVertexContextMenu)
+  onVertexContextMenuRef.current = onVertexContextMenu
+
   // 頂点ハンドル用ソース＆レイヤーのセットアップ
   useEffect(() => {
     if (!map) return
@@ -97,9 +138,9 @@ export function useVertexEditing({
       type: 'circle',
       source: VERTEX_SOURCE_ID,
       paint: {
-        'circle-radius': 6,
-        'circle-color': '#ffffff',
-        'circle-stroke-color': '#1a73e8',
+        'circle-radius': ['case', ['==', ['get', 'selected'], true], 8, 6],
+        'circle-color': ['case', ['==', ['get', 'selected'], true], '#ef4444', '#ffffff'],
+        'circle-stroke-color': ['case', ['==', ['get', 'selected'], true], '#ef4444', '#1a73e8'],
         'circle-stroke-width': 2.5,
       },
     })
@@ -126,10 +167,10 @@ export function useVertexEditing({
       source.setData(emptyFC)
       return
     }
-    source.setData(getVertexHandles(selected))
-  }, [map, selectedFeatureId, features])
+    source.setData(getVertexHandles(selected, selectedVertex))
+  }, [map, selectedFeatureId, features, selectedVertex])
 
-  // マウスドラッグイベントハンドラ
+  // マウスドラッグ・クリック・右クリックイベントハンドラ
   useEffect(() => {
     if (!map) return
     const canvas = map.getCanvas()
@@ -144,7 +185,7 @@ export function useVertexEditing({
 
         // 頂点ハンドルをリアルタイム更新
         const vertexSrc = map.getSource(VERTEX_SOURCE_ID) as maplibregl.GeoJSONSource | undefined
-        if (vertexSrc) vertexSrc.setData(getVertexHandles(updatedFeature))
+        if (vertexSrc) vertexSrc.setData(getVertexHandles(updatedFeature, selectedVertexRef.current))
 
         // メインソースも即時更新（プレビュー）
         const mainSrc = map.getSource(mainSourceId) as maplibregl.GeoJSONSource | undefined
@@ -183,7 +224,7 @@ export function useVertexEditing({
 
     const onMouseUp = () => {
       if (!dragRef.current) return
-      const { feature, hasMoved } = dragRef.current
+      const { featureId, vertexIndex, feature, hasMoved } = dragRef.current
       dragRef.current = null
       map.dragPan.enable()
       canvas.style.cursor = ''
@@ -193,19 +234,67 @@ export function useVertexEditing({
       setTimeout(() => { justDraggedRef.current = false }, 50)
 
       if (hasMoved) {
-        onCommit(feature)
+        onCommitRef.current(feature)
+      } else {
+        // ドラッグしなかった = クリック → 頂点を選択
+        onVertexSelectRef.current({ featureId, vertexIndex })
       }
+    }
+
+    const onContextMenu = (e: maplibregl.MapMouseEvent) => {
+      if (!map.getLayer(VERTEX_LAYER_ID)) return
+      const hits = map.queryRenderedFeatures(e.point, { layers: [VERTEX_LAYER_ID] })
+      if (hits.length === 0) return
+
+      const hit = hits[0]
+      const featureId = hit.properties?.featureId as string
+      const vertexIndex = hit.properties?.vertexIndex as number
+      e.preventDefault()
+      onVertexSelectRef.current({ featureId, vertexIndex })
+      onVertexContextMenuRef.current({
+        featureId,
+        vertexIndex,
+        x: e.originalEvent.clientX,
+        y: e.originalEvent.clientY,
+      })
     }
 
     map.on('mousemove', onMouseMove)
     map.on('mousedown', onMouseDown)
     map.on('mouseup', onMouseUp)
+    map.on('contextmenu', onContextMenu)
     return () => {
       map.off('mousemove', onMouseMove)
       map.off('mousedown', onMouseDown)
       map.off('mouseup', onMouseUp)
+      map.off('contextmenu', onContextMenu)
     }
-  }, [map, mainSourceId, onCommit])
+  }, [map, mainSourceId])
 
-  return { justDraggedRef }
+  /** 選択中の頂点を削除する */
+  const deleteSelectedVertex = useCallback(() => {
+    const sv = selectedVertexRef.current
+    if (!sv) return
+    const feature = featuresRef.current.features.find((f) => f.properties?._id === sv.featureId)
+    if (!feature || !canDeleteVertex(feature)) return
+    const updated = applyVertexDelete(feature, sv.vertexIndex)
+    onCommitRef.current(updated)
+    onVertexSelectRef.current(null)
+  }, [])
+
+  // Delete/Backspace キーボードハンドラ
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable) return
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      if (!selectedVertexRef.current) return
+      e.preventDefault()
+      deleteSelectedVertex()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [deleteSelectedVertex])
+
+  return { justDraggedRef, deleteSelectedVertex }
 }

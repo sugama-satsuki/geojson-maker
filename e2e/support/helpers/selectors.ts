@@ -27,6 +27,10 @@ export const GEOJSON_FEATURE_ITEM_HIGHLIGHTED = '.geojson-panel__feature-item--h
 export const FEATURE_CONTEXT_MENU = '.feature-context-menu'
 export const FEATURE_CONTEXT_MENU_ITEM = '.feature-context-menu__item'
 
+/** 頂点コンテキストメニュー */
+export const VERTEX_CONTEXT_MENU = '.vertex-context-menu'
+export const VERTEX_CONTEXT_MENU_ITEM = '.vertex-context-menu__item'
+
 /** トースト通知 */
 export const MAP_TOAST = '.map-toast'
 

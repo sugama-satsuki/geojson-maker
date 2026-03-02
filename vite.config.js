@@ -7,6 +7,6 @@ export default defineConfig({
   base: '/geojson-maker/',
   test: {
     globals: true,
-    coverage: { include: ['src/lib/**'] },
+    coverage: { include: ['src/lib/**', 'src/drawing-engine/lib/**', 'src/drawing-engine/hooks/**'] },
   },
 })

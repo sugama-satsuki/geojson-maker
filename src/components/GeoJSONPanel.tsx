@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FeaturePropertiesEditor } from './FeaturePropertiesEditor'
-import { parseGeoJSONImport } from '../lib/geojson-helpers'
+import { parseGeoJSONImport } from '../drawing-engine'
 import './GeoJSONPanel.css'
 
 const GEOM_TYPE_LABEL: Record<string, string> = {

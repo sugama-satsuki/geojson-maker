@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { DrawMode, DrawModeSelector } from './DrawModeSelector'
+import type { DrawMode } from '../types'
+import { DrawModeSelector } from './DrawModeSelector'
 import { clampPosition } from '../lib/clamp-position'
 import './DrawControlPanel.css'
 
-type DrawControlPanelProps = {
+export type DrawControlPanelProps = {
   drawMode: DrawMode | null
   isDrawingPath: boolean
   canFinalizeDraft: boolean

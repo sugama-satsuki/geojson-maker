@@ -1,6 +1,4 @@
-import { DrawMode } from '../components/DrawModeSelector'
-
-type PathMode = Extract<DrawMode, 'line' | 'polygon'>
+import type { DrawMode, PathMode } from '../types'
 
 let featureIdCounter = 0
 export function nextFeatureId(): string {
@@ -127,4 +125,3 @@ export function createPathFeature(vertices: [number, number][], mode: PathMode):
     }
   }
 }
-

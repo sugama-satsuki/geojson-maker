@@ -1,7 +1,6 @@
-import './DrawModeSelector.css'
+import type { DrawMode } from '../types'
 import { DRAW_MODE_ICONS } from './DrawModeIcons'
-
-export type DrawMode = 'point' | 'line' | 'polygon' | 'symbol'
+import './DrawModeSelector.css'
 
 const DRAW_MODE_LABELS: Record<DrawMode, string> = {
   point: 'ポイント',
