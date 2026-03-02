@@ -22,6 +22,14 @@ describe('HELP_SECTIONS', () => {
     }
   })
 
+  it('「選択・編集」セクションに頂点削除の説明が含まれる', () => {
+    const section = HELP_SECTIONS.find((s) => s.title === '選択・編集')
+    expect(section).toBeDefined()
+    const labels = section!.items.map((i) => i.label)
+    expect(labels).toContain('頂点の削除')
+    expect(labels).toContain('描画中ポイントの削除')
+  })
+
   it('「操作・ショートカット」セクションのアイテムに shortcut が含まれる', () => {
     const section = HELP_SECTIONS.find((s) => s.title === '操作・ショートカット')
     expect(section).toBeDefined()
