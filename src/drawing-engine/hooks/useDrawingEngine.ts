@@ -473,7 +473,7 @@ export function useDrawingEngine(
     setContextMenu(null)
   }, [])
 
-  const controlPanelProps: Omit<DrawControlPanelProps, 'onShareURL'> = {
+  const controlPanelProps: DrawControlPanelProps = {
     drawMode,
     isDrawingPath,
     canFinalizeDraft,
@@ -487,8 +487,6 @@ export function useDrawingEngine(
     onResetGeoJSON: resetGeoJSON,
     onUndo: undoFeatures,
     onRedo: redoFeatures,
-    onImportCSV: importCSV,
-    onImportGeoJSON: importGeoJSON,
   }
 
   return {

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FeaturePropertiesEditor } from './FeaturePropertiesEditor'
+import { parseGeoJSONImport } from '../drawing-engine'
 import './GeoJSONPanel.css'
 
 const GEOM_TYPE_LABEL: Record<string, string> = {
@@ -13,6 +14,9 @@ type GeoJSONPanelProps = {
   highlightedFeatureId: string | null
   onFeatureClick: (featureId: string) => void
   onUpdateFeatureProperties: (featureId: string, userProperties: Record<string, string>) => void
+  onImportCSV: (text: string) => void
+  onImportGeoJSON: (features: GeoJSON.Feature[], mode: 'replace' | 'merge') => void
+  onShareURL: () => void
 }
 
 export function GeoJSONPanel({
@@ -20,12 +24,34 @@ export function GeoJSONPanel({
   highlightedFeatureId,
   onFeatureClick,
   onUpdateFeatureProperties,
+  onImportCSV,
+  onImportGeoJSON,
+  onShareURL,
 }: GeoJSONPanelProps) {
   const jsonValue = useMemo(() => JSON.stringify(featureCollection, null, 2), [featureCollection])
   const [copied, setCopied] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
   const [expandedFeatureId, setExpandedFeatureId] = useState<string | null>(null)
+  const [isImportHovered, setIsImportHovered] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
+  const csvFileInputRef = useRef<HTMLInputElement>(null)
+  const geojsonFileInputRef = useRef<HTMLInputElement>(null)
+  const importHoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleImportMouseEnter = useCallback(() => {
+    if (importHoverTimerRef.current) {
+      clearTimeout(importHoverTimerRef.current)
+      importHoverTimerRef.current = null
+    }
+    setIsImportHovered(true)
+  }, [])
+
+  const handleImportMouseLeave = useCallback(() => {
+    importHoverTimerRef.current = setTimeout(() => {
+      setIsImportHovered(false)
+      importHoverTimerRef.current = null
+    }, 200)
+  }, [])
 
   // ハイライトされたフィーチャへスクロール
   useEffect(() => {
@@ -72,6 +98,40 @@ export function GeoJSONPanel({
     setTimeout(() => setDownloaded(false), 1600)
   }
 
+  const handleCSVFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      onImportCSV(reader.result as string)
+    }
+    reader.onerror = () => {
+      console.error('CSV ファイルの読み込みに失敗しました', reader.error)
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }, [onImportCSV])
+
+  const handleGeoJSONFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const features = parseGeoJSONImport(reader.result as string)
+        const replace = window.confirm('既存のフィーチャを置き換えますか？\n「OK」→ 置換\n「キャンセル」→ マージ（追加）')
+        onImportGeoJSON(features, replace ? 'replace' : 'merge')
+      } catch (err) {
+        console.error('GeoJSON のインポートに失敗しました', err)
+      }
+    }
+    reader.onerror = () => {
+      console.error('GeoJSON ファイルの読み込みに失敗しました', reader.error)
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }, [onImportGeoJSON])
+
   const handleFeatureItemClick = (fid: string) => {
     setExpandedFeatureId((prev) => (prev === fid ? null : fid))
     onFeatureClick(fid)
@@ -80,8 +140,53 @@ export function GeoJSONPanel({
   return (
     <div className='geojson-panel'>
       <div className='geojson-panel__header'>
-        <div className='geojson-panel__title'>GeoJSON</div>
-        <div className='geojson-panel__count'>feature：{featureCollection.features.length}件</div>
+        <div className='geojson-panel__header-left'>
+          <div className='geojson-panel__title'>GeoJSON</div>
+          <div className='geojson-panel__count'>feature：{featureCollection.features.length}件</div>
+        </div>
+        <div
+          className='geojson-panel__import-wrapper'
+          onMouseEnter={handleImportMouseEnter}
+          onMouseLeave={handleImportMouseLeave}
+          onFocus={handleImportMouseEnter}
+          onBlur={handleImportMouseLeave}
+        >
+          <button
+            type='button'
+            className='geojson-panel__header-button'
+            title='インポート'
+            aria-label='インポート'
+            aria-haspopup='true'
+            aria-expanded={isImportHovered}
+            onClick={() => setIsImportHovered((v) => !v)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </button>
+          {isImportHovered && (
+            <div className='geojson-panel__import-popup' role='menu'>
+              <button
+                type='button'
+                role='menuitem'
+                className='geojson-panel__import-popup-btn'
+                onClick={() => csvFileInputRef.current?.click()}
+              >
+                CSVインポート
+              </button>
+              <button
+                type='button'
+                role='menuitem'
+                className='geojson-panel__import-popup-btn'
+                onClick={() => geojsonFileInputRef.current?.click()}
+              >
+                GeoJSONインポート
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {featureCollection.features.length > 0 && (
@@ -138,7 +243,18 @@ export function GeoJSONPanel({
         >
             {downloaded ? 'ダウンロード完了' : 'geojsonをダウンロード'}
         </button>
+        <div className='geojson-panel__separator' />
+        <button
+          type='button'
+          onClick={onShareURL}
+          aria-label='URLをコピー'
+          className='geojson-panel__button geojson-panel__button--secondary'
+        >
+          URLをコピー
+        </button>
       </div>
+      <input ref={csvFileInputRef} type='file' accept='.csv' onChange={handleCSVFileChange} style={{ display: 'none' }} />
+      <input ref={geojsonFileInputRef} type='file' accept='.geojson,.json' onChange={handleGeoJSONFileChange} style={{ display: 'none' }} />
     </div>
   )
 }

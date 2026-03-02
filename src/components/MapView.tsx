@@ -6,6 +6,7 @@ import { GeoJSONPanel } from './GeoJSONPanel'
 import { FeatureContextMenu } from './FeatureContextMenu'
 import { AddressSearchBar } from './AddressSearchBar'
 import { AppLogo } from './AppLogo'
+import { HelpSidebar } from './HelpSidebar'
 import { getFeatureCenter } from '../lib/feature-center'
 import { mergeUserProperties } from '../lib/property-helpers'
 import { encodeFeaturesToURL, decodeURLToFeatures, URL_SIZE_WARNING_CHARS } from '../lib/url-helpers'
@@ -31,6 +32,7 @@ export const MapView: React.FC = () => {
   })
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const featuresRef = useRef(engine.features)
   featuresRef.current = engine.features
@@ -91,7 +93,7 @@ export const MapView: React.FC = () => {
         data-gesture-handling='off'
         data-navigation-control='off'
         data-scale-control='on'
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: 'calc(100% - 360px)', height: '100%' }}
       />
 
       {/* ラバーバンド選択の視覚表示 */}
@@ -116,7 +118,6 @@ export const MapView: React.FC = () => {
 
       <DrawControlPanel
         {...engine.controlPanelProps}
-        onShareURL={copyShareURL}
       />
 
       <GeoJSONPanel
@@ -124,6 +125,9 @@ export const MapView: React.FC = () => {
         highlightedFeatureId={engine.highlightedPanelFeatureId}
         onFeatureClick={handlePanelFeatureClick}
         onUpdateFeatureProperties={updateFeatureProperties}
+        onImportCSV={engine.importCSV}
+        onImportGeoJSON={engine.importGeoJSON}
+        onShareURL={copyShareURL}
       />
 
       {engine.contextMenuEvent && (
@@ -140,6 +144,8 @@ export const MapView: React.FC = () => {
           {toast.message}
         </div>
       )}
+
+      <HelpSidebar isOpen={isHelpOpen} onOpen={() => setIsHelpOpen(true)} onClose={() => setIsHelpOpen(false)} />
     </div>
   )
 }
