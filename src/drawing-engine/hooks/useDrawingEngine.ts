@@ -320,8 +320,9 @@ export function useDrawingEngine(
       if (map.getLayer(DRAFT_POINT_LAYER_ID)) {
         const draftHit = map.queryRenderedFeatures(event.point, { layers: [DRAFT_POINT_LAYER_ID] })
         if (draftHit.length > 0) {
-          const draftIndex = draftHit[0].properties?.draftIndex as number
-          if (draftIndex !== undefined) {
+          const rawDraftIndex = draftHit[0].properties?.draftIndex
+          const draftIndex = typeof rawDraftIndex === 'number' ? rawDraftIndex : Number(rawDraftIndex)
+          if (Number.isInteger(draftIndex) && draftIndex >= 0) {
             event.preventDefault()
             setContextMenu(null)
             setVertexContextMenu(null)
