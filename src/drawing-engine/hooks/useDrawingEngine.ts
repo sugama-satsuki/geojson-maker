@@ -35,6 +35,12 @@ export type ContextMenuEvent = {
   y: number
 }
 
+export type DraftContextMenuEvent = {
+  draftIndex: number
+  x: number
+  y: number
+}
+
 export type DrawingEngineResult = {
   // 状態
   features: GeoJSON.FeatureCollection
@@ -49,6 +55,7 @@ export type DrawingEngineResult = {
   contextMenuEvent: ContextMenuEvent | null
   vertexContextMenuEvent: VertexContextMenuEvent | null
   selectedVertex: SelectedVertex | null
+  draftContextMenuEvent: DraftContextMenuEvent | null
 
   // アクション
   setDrawMode: (mode: DrawMode | null) => void
@@ -64,6 +71,8 @@ export type DrawingEngineResult = {
   importGeoJSON: (features: GeoJSON.Feature[], mode: 'replace' | 'merge') => void
   closeContextMenu: () => void
   closeVertexContextMenu: () => void
+  deleteDraftPoint: (index: number) => void
+  closeDraftContextMenu: () => void
 
   // DrawControlPanel に渡す props（onShareURL は含まない）
   controlPanelProps: Omit<DrawControlPanelProps, 'onShareURL'>
@@ -91,6 +100,7 @@ export function useDrawingEngine(
   const [contextMenu, setContextMenu] = useState<ContextMenuEvent | null>(null)
   const [vertexContextMenu, setVertexContextMenu] = useState<VertexContextMenuEvent | null>(null)
   const [selectedVertex, setSelectedVertex] = useState<SelectedVertex | null>(null)
+  const [draftContextMenu, setDraftContextMenu] = useState<DraftContextMenuEvent | null>(null)
   const [rubberBand, setRubberBand] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
 
   const featuresRef = useRef(features)
@@ -146,6 +156,7 @@ export function useDrawingEngine(
     setContextMenu(null)
     setVertexContextMenu(null)
     setSelectedVertex(null)
+    setDraftContextMenu(null)
   }, [drawMode])
 
   // MapLibre ソース・レイヤーのセットアップ
@@ -251,6 +262,7 @@ export function useDrawingEngine(
       if (justDraggedRef.current) return
 
       setContextMenu(null)
+      setDraftContextMenu(null)
 
       if (map.getLayer(VERTEX_LAYER_ID)) {
         const vertexHit = map.queryRenderedFeatures(event.point, { layers: [VERTEX_LAYER_ID] })
@@ -299,7 +311,24 @@ export function useDrawingEngine(
         const vertexHit = map.queryRenderedFeatures(event.point, { layers: [VERTEX_LAYER_ID] })
         if (vertexHit.length > 0) {
           setContextMenu(null)
+          setDraftContextMenu(null)
           return
+        }
+      }
+
+      // ドラフトポイントの右クリック
+      if (map.getLayer(DRAFT_POINT_LAYER_ID)) {
+        const draftHit = map.queryRenderedFeatures(event.point, { layers: [DRAFT_POINT_LAYER_ID] })
+        if (draftHit.length > 0) {
+          const rawDraftIndex = draftHit[0].properties?.draftIndex
+          const draftIndex = typeof rawDraftIndex === 'number' ? rawDraftIndex : Number(rawDraftIndex)
+          if (Number.isInteger(draftIndex) && draftIndex >= 0) {
+            event.preventDefault()
+            setContextMenu(null)
+            setVertexContextMenu(null)
+            setDraftContextMenu({ draftIndex, x: event.originalEvent.clientX, y: event.originalEvent.clientY })
+            return
+          }
         }
       }
 
@@ -311,6 +340,7 @@ export function useDrawingEngine(
           if (found) {
             event.preventDefault()
             setVertexContextMenu(null)
+            setDraftContextMenu(null)
             setContextMenu({ feature: found, x: event.originalEvent.clientX, y: event.originalEvent.clientY })
             return
           }
@@ -318,6 +348,7 @@ export function useDrawingEngine(
       }
       setContextMenu(null)
       setVertexContextMenu(null)
+      setDraftContextMenu(null)
     }
 
     map.on('click', handleClick)
@@ -500,6 +531,15 @@ export function useDrawingEngine(
     setVertexContextMenu(null)
   }, [])
 
+  const deleteDraftPoint = useCallback((index: number) => {
+    setDraftCoords((prev) => prev.filter((_, i) => i !== index))
+    setDraftContextMenu(null)
+  }, [])
+
+  const closeDraftContextMenu = useCallback(() => {
+    setDraftContextMenu(null)
+  }, [])
+
   const controlPanelProps: DrawControlPanelProps = {
     drawMode,
     isDrawingPath,
@@ -529,6 +569,7 @@ export function useDrawingEngine(
     contextMenuEvent: contextMenu,
     vertexContextMenuEvent: vertexContextMenu,
     selectedVertex,
+    draftContextMenuEvent: draftContextMenu,
     setDrawMode,
     setFeatures,
     setSelectedFeatureIds,
@@ -542,6 +583,8 @@ export function useDrawingEngine(
     importGeoJSON,
     closeContextMenu,
     closeVertexContextMenu,
+    deleteDraftPoint,
+    closeDraftContextMenu,
     controlPanelProps,
   }
 }

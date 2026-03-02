@@ -152,6 +152,15 @@ export const MapView: React.FC = () => {
         )
       })()}
 
+      {engine.draftContextMenuEvent && (
+        <VertexContextMenu
+          position={{ x: engine.draftContextMenuEvent.x, y: engine.draftContextMenuEvent.y }}
+          canDelete={true}
+          onDelete={() => engine.deleteDraftPoint(engine.draftContextMenuEvent!.draftIndex)}
+          onClose={engine.closeDraftContextMenu}
+        />
+      )}
+
       {toast && (
         <div className={`map-toast map-toast--${toast.type}`}>
           {toast.message}
