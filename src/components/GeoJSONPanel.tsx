@@ -32,9 +32,26 @@ export function GeoJSONPanel({
   const [copied, setCopied] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
   const [expandedFeatureId, setExpandedFeatureId] = useState<string | null>(null)
+  const [isImportHovered, setIsImportHovered] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
   const csvFileInputRef = useRef<HTMLInputElement>(null)
   const geojsonFileInputRef = useRef<HTMLInputElement>(null)
+  const importHoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleImportMouseEnter = useCallback(() => {
+    if (importHoverTimerRef.current) {
+      clearTimeout(importHoverTimerRef.current)
+      importHoverTimerRef.current = null
+    }
+    setIsImportHovered(true)
+  }, [])
+
+  const handleImportMouseLeave = useCallback(() => {
+    importHoverTimerRef.current = setTimeout(() => {
+      setIsImportHovered(false)
+      importHoverTimerRef.current = null
+    }, 200)
+  }, [])
 
   // ハイライトされたフィーチャへスクロール
   useEffect(() => {
@@ -121,33 +138,41 @@ export function GeoJSONPanel({
           <div className='geojson-panel__title'>GeoJSON</div>
           <div className='geojson-panel__count'>feature：{featureCollection.features.length}件</div>
         </div>
-        <div className='geojson-panel__header-actions'>
+        <div
+          className='geojson-panel__import-wrapper'
+          onMouseEnter={handleImportMouseEnter}
+          onMouseLeave={handleImportMouseLeave}
+        >
           <button
             type='button'
             className='geojson-panel__header-button'
-            onClick={() => csvFileInputRef.current?.click()}
-            title='CSVインポート'
+            title='インポート'
+            aria-label='インポート'
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            CSV
           </button>
-          <button
-            type='button'
-            className='geojson-panel__header-button'
-            onClick={() => geojsonFileInputRef.current?.click()}
-            title='GeoJSONインポート'
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            GeoJSON
-          </button>
+          {isImportHovered && (
+            <div className='geojson-panel__import-popup'>
+              <button
+                type='button'
+                className='geojson-panel__import-popup-btn'
+                onClick={() => csvFileInputRef.current?.click()}
+              >
+                CSVインポート
+              </button>
+              <button
+                type='button'
+                className='geojson-panel__import-popup-btn'
+                onClick={() => geojsonFileInputRef.current?.click()}
+              >
+                GeoJSONインポート
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

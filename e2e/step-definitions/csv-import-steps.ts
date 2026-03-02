@@ -25,7 +25,17 @@ When('CSVファイルをインポートする:', async function (this: CustomWor
   fs.unlinkSync(tmpFile)
 })
 
-Then('{string} インポートボタンが表示されている', async function (this: CustomWorld, buttonText: string) {
-  const button = this.page.locator(`${GEOJSON_PANEL} .geojson-panel__header-button`, { hasText: buttonText })
+Then('GeoJSONパネルにインポートアイコンが表示されている', async function (this: CustomWorld) {
+  const button = this.page.locator(`${GEOJSON_PANEL} .geojson-panel__header-button[aria-label="インポート"]`)
   await expect(button).toBeVisible()
+})
+
+When('インポートアイコンにホバーする', async function (this: CustomWorld) {
+  const button = this.page.locator(`${GEOJSON_PANEL} .geojson-panel__header-button[aria-label="インポート"]`)
+  await button.hover()
+})
+
+Then('インポートポップアップに {string} が表示されている', async function (this: CustomWorld, buttonText: string) {
+  const popup = this.page.locator(`${GEOJSON_PANEL} .geojson-panel__import-popup-btn`, { hasText: buttonText })
+  await expect(popup).toBeVisible()
 })
