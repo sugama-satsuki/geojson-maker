@@ -1,7 +1,7 @@
 import { When, Then, DataTable } from '@cucumber/cucumber'
 import { expect } from '@playwright/test'
 import { CustomWorld } from '../support/world.js'
-import { IMPORT_ACTION_BUTTON, IMPORT_POPUP_BTN } from '../support/helpers/selectors.js'
+import { GEOJSON_PANEL } from '../support/helpers/selectors.js'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as os from 'os'
@@ -25,13 +25,17 @@ When('CSVファイルをインポートする:', async function (this: CustomWor
   fs.unlinkSync(tmpFile)
 })
 
-When('インポートボタンにホバーする', async function (this: CustomWorld) {
-  await this.page.hover(IMPORT_ACTION_BUTTON)
-  // ポップアップが表示されるのを待つ
-  await this.page.waitForSelector(IMPORT_POPUP_BTN, { timeout: 3000 })
+Then('GeoJSONパネルにインポートアイコンが表示されている', async function (this: CustomWorld) {
+  const button = this.page.locator(`${GEOJSON_PANEL} .geojson-panel__header-button[aria-label="インポート"]`)
+  await expect(button).toBeVisible()
 })
 
-Then('{string} インポートボタンが表示されている', async function (this: CustomWorld, buttonText: string) {
-  const button = this.page.locator(IMPORT_POPUP_BTN, { hasText: buttonText })
-  await expect(button).toBeVisible()
+When('インポートアイコンにホバーする', async function (this: CustomWorld) {
+  const button = this.page.locator(`${GEOJSON_PANEL} .geojson-panel__header-button[aria-label="インポート"]`)
+  await button.hover()
+})
+
+Then('インポートポップアップに {string} が表示されている', async function (this: CustomWorld, buttonText: string) {
+  const popup = this.page.locator(`${GEOJSON_PANEL} .geojson-panel__import-popup-btn`, { hasText: buttonText })
+  await expect(popup).toBeVisible()
 })

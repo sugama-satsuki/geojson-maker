@@ -9,7 +9,7 @@ import { GeoJSONPanel } from './GeoJSONPanel'
 import { FeatureContextMenu } from './FeatureContextMenu'
 import { AddressSearchBar } from './AddressSearchBar'
 import { AppLogo } from './AppLogo'
-import { HelpModal } from './HelpModal'
+import { HelpSidebar } from './HelpSidebar'
 import { createPointFeature, createPathFeature, createDraftFeatureCollection, nextFeatureId } from '../lib/geojson-helpers'
 import { getFeatureCenter } from '../lib/feature-center'
 import { parseCSV } from '../lib/csv-helpers'
@@ -559,12 +559,8 @@ export const MapView: React.FC = () => {
         onFinalize={finalizeDraft}
         onDeleteFeature={deleteSelectedFeature}
         onResetGeoJSON={resetGeoJSON}
-        onShareURL={copyShareURL}
         onUndo={undoFeatures}
         onRedo={redoFeatures}
-        onImportCSV={handleImportCSV}
-        onImportGeoJSON={handleImportGeoJSON}
-        onOpenHelp={() => setIsHelpOpen(true)}
       />
 
       <GeoJSONPanel
@@ -572,6 +568,9 @@ export const MapView: React.FC = () => {
         highlightedFeatureId={highlightedPanelFeatureId}
         onFeatureClick={handlePanelFeatureClick}
         onUpdateFeatureProperties={updateFeatureProperties}
+        onImportCSV={handleImportCSV}
+        onImportGeoJSON={handleImportGeoJSON}
+        onShareURL={copyShareURL}
       />
 
       {contextMenu && (
@@ -589,7 +588,7 @@ export const MapView: React.FC = () => {
         </div>
       )}
 
-      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      <HelpSidebar isOpen={isHelpOpen} onOpen={() => setIsHelpOpen(true)} onClose={() => setIsHelpOpen(false)} />
     </div>
   )
 }
