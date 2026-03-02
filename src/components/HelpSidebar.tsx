@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { HELP_SECTIONS, getShortcutItems } from '../lib/help-content'
 import './HelpSidebar.css'
 
@@ -9,8 +9,13 @@ type HelpSidebarProps = {
 }
 
 export function HelpSidebar({ isOpen, onOpen, onClose }: HelpSidebarProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const isMac = /mac/i.test(navigator.userAgent)
   const shortcutItems = getShortcutItems(isMac)
+
+  useEffect(() => {
+    if (isOpen) closeButtonRef.current?.focus()
+  }, [isOpen])
 
   useEffect(() => {
     if (!isOpen) return
@@ -53,11 +58,17 @@ export function HelpSidebar({ isOpen, onOpen, onClose }: HelpSidebarProps) {
       )}
 
       {isOpen && (
-        <div className='help-sidebar' role='dialog' aria-label='使い方ガイド'>
+        <div
+          className='help-sidebar'
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby='help-sidebar-title'
+        >
           <div className='help-sidebar__header'>
-            <h2 className='help-sidebar__title'>使い方ガイド</h2>
+            <h2 id='help-sidebar-title' className='help-sidebar__title'>使い方ガイド</h2>
             <button
               type='button'
+              ref={closeButtonRef}
               className='help-sidebar__close'
               onClick={onClose}
               aria-label='閉じる'

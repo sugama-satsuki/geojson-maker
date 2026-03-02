@@ -105,6 +105,9 @@ export function GeoJSONPanel({
     reader.onload = () => {
       onImportCSV(reader.result as string)
     }
+    reader.onerror = () => {
+      console.error('CSV ファイルの読み込みに失敗しました', reader.error)
+    }
     reader.readAsText(file)
     e.target.value = ''
   }, [onImportCSV])
@@ -121,6 +124,9 @@ export function GeoJSONPanel({
       } catch (err) {
         console.error('GeoJSON のインポートに失敗しました', err)
       }
+    }
+    reader.onerror = () => {
+      console.error('GeoJSON ファイルの読み込みに失敗しました', reader.error)
     }
     reader.readAsText(file)
     e.target.value = ''
@@ -142,12 +148,17 @@ export function GeoJSONPanel({
           className='geojson-panel__import-wrapper'
           onMouseEnter={handleImportMouseEnter}
           onMouseLeave={handleImportMouseLeave}
+          onFocus={handleImportMouseEnter}
+          onBlur={handleImportMouseLeave}
         >
           <button
             type='button'
             className='geojson-panel__header-button'
             title='インポート'
             aria-label='インポート'
+            aria-haspopup='true'
+            aria-expanded={isImportHovered}
+            onClick={() => setIsImportHovered((v) => !v)}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -156,9 +167,10 @@ export function GeoJSONPanel({
             </svg>
           </button>
           {isImportHovered && (
-            <div className='geojson-panel__import-popup'>
+            <div className='geojson-panel__import-popup' role='menu'>
               <button
                 type='button'
+                role='menuitem'
                 className='geojson-panel__import-popup-btn'
                 onClick={() => csvFileInputRef.current?.click()}
               >
@@ -166,6 +178,7 @@ export function GeoJSONPanel({
               </button>
               <button
                 type='button'
+                role='menuitem'
                 className='geojson-panel__import-popup-btn'
                 onClick={() => geojsonFileInputRef.current?.click()}
               >
